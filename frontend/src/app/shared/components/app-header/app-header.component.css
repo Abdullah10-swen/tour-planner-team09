@@ -1,0 +1,142 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: #fff;
+  border-bottom: 1px solid #e8e4dc;
+  flex-wrap: wrap;
+  min-height: 3.25rem;
+  box-sizing: border-box;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #1a1a1a;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.brand__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.brand__icon i {
+  line-height: 1;
+}
+
+.brand__name {
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.header__center {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  justify-content: center;
+  min-width: min(100%, 28rem);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 420px;
+  background: #f0ebe3;
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+}
+
+.search__icon {
+  opacity: 0.5;
+  font-size: 0.9rem;
+}
+
+.search__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font: inherit;
+  outline: none;
+  min-width: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: #1b4332;
+  color: #fff;
+}
+
+.btn--primary:hover {
+  filter: brightness(1.05);
+}
+
+.header__right {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: #e8e4dc;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  color: #444;
+  font-size: 0.95rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+@media (max-width: 720px) {
+  .header__center {
+    order: 3;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .search {
+    max-width: none;
+  }
+}

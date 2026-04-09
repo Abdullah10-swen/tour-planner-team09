@@ -1,0 +1,30 @@
+<header class="header">
+  <a routerLink="/" class="brand">
+    <span class="brand__icon" aria-hidden="true">
+      <i class="fa-solid fa-suitcase"></i>
+    </span>
+    <span class="brand__name">TourPlaner</span>
+  </a>
+
+  <div class="header__center">
+    <label class="sr-only" for="tour-search">Suche</label>
+    <div class="search">
+      <span class="search__icon" aria-hidden="true">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </span>
+      <input
+        id="tour-search"
+        type="search"
+        class="search__input"
+        placeholder="Touren durchsuchen…"
+        [value]="searchQuery()"
+        (input)="onSearchInput($event)"
+      />
+    </div>
+    <a routerLink="/tours/new" class="btn btn--primary">+ Neue Tour</a>
+  </div>
+
+  <div class="header__right" aria-hidden="true">
+    <span class="avatar">A</span>
+  </div>
+</header>
