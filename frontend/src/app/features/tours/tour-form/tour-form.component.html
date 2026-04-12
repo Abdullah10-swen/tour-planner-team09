@@ -1,0 +1,114 @@
+<div class="page">
+  <header class="bar">
+    <a routerLink="/" class="brand">
+      <span class="brand__icon" aria-hidden="true">
+        <i class="fa-solid fa-suitcase"></i>
+      </span>
+      <span class="brand__name">TourPlaner</span>
+    </a>
+    <div class="bar__tail">
+      <div class="bar__actions">
+        <button type="submit" form="tour-form" class="btn btn--primary" [disabled]="saving">
+          Tour speichern
+        </button>
+        <button type="button" class="btn btn--ghost" (click)="cancel()">Abbrechen</button>
+      </div>
+      <span class="avatar" aria-hidden="true">A</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <h1 class="title">
+        {{ tourId == null ? 'Neue Tour anlegen' : 'Tour bearbeiten' }}
+      </h1>
+
+      @if (errorMessage) {
+        <p class="err">{{ errorMessage }}</p>
+      }
+
+      <form id="tour-form" (ngSubmit)="submit()" [formGroup]="form" novalidate>
+        <label class="field">
+          <span class="field__label">Tourname *</span>
+          <input class="field__input" type="text" formControlName="name" />
+          @if (form.controls.name.touched && form.controls.name.invalid) {
+            <span class="field__hint">Bitte einen Namen eingeben.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Beschreibung</span>
+          <textarea class="field__input" rows="4" formControlName="description"></textarea>
+        </label>
+
+        <div class="field">
+          <span class="field__label">Transporttyp *</span>
+          <div class="segmented" role="group" aria-label="Transporttyp">
+            @for (opt of ['hike', 'bike', 'run', 'vacation']; track opt) {
+              <button
+                type="button"
+                class="seg"
+                [class.seg--on]="form.controls.transportType.value === opt"
+                (click)="form.controls.transportType.setValue(opt)"
+              >
+                {{ opt }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Startpunkt *</span>
+          <input class="field__input" type="text" formControlName="fromLocation" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Endpunkt *</span>
+          <input class="field__input" type="text" formControlName="toLocation" />
+        </label>
+
+        <div class="row">
+          <label class="field">
+            <span class="field__label">Distanz (km) *</span>
+            <input class="field__input" type="number" step="0.1" min="0" formControlName="distance" />
+          </label>
+          <label class="field">
+            <span class="field__label">Geschätzte Zeit (h) *</span>
+            <input
+              class="field__input"
+              type="number"
+              step="0.1"
+              min="0"
+              formControlName="estimatedTime"
+            />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Bild-URL</span>
+          <input class="field__input" type="url" formControlName="imageUrl" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Routen-Info (Text/JSON-Platzhalter)</span>
+          <textarea class="field__input" rows="2" formControlName="routeInfo"></textarea>
+        </label>
+      </form>
+
+      <div class="summary">
+        <div class="summary__box">
+          <div class="summary__value">{{ form.controls.distance.value | number : '1.1-1' }} km</div>
+          <div class="summary__label">Distanz</div>
+        </div>
+        <div class="summary__box">
+          <div class="summary__value">{{ form.controls.estimatedTime.value | number : '1.1-1' }} h</div>
+          <div class="summary__label">Est. Zeit</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="map" aria-hidden="true">
+      <p class="map__hint">Karten-Vorschau (Leaflet folgt im Final)</p>
+    </aside>
+  </div>
+</div>

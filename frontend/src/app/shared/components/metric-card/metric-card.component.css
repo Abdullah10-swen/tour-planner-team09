@@ -1,0 +1,22 @@
+.metric {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  min-width: 5.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.metric__value {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.metric__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  margin-top: 0.2rem;
+}

@@ -1,0 +1,92 @@
+<div class="page">
+  <header class="bar">
+    <a routerLink="/" class="brand">
+      <span class="brand__icon" aria-hidden="true">
+        <i class="fa-solid fa-suitcase"></i>
+      </span>
+      <span class="brand__name">TourPlaner</span>
+    </a>
+    <div class="bar__tail">
+      <div class="bar__actions">
+        <button type="submit" form="log-form" class="btn btn--primary" [disabled]="saving">
+          {{ logId == null ? 'Log speichern' : 'Änderungen speichern' }}
+        </button>
+        <button type="button" class="btn btn--ghost" (click)="cancel()">Abbrechen</button>
+      </div>
+      <span class="avatar" aria-hidden="true">A</span>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      @if (tour(); as t) {
+        <div class="banner">
+          <span class="banner__tag">{{ t.transportType }}</span>
+          <h1 class="title">
+            {{ logId == null ? 'Neuer Log' : 'Log bearbeiten' }} · {{ t.name }}
+          </h1>
+        </div>
+      }
+
+      @if (errorMessage) {
+        <p class="err">{{ errorMessage }}</p>
+      }
+
+      <form id="log-form" (ngSubmit)="submit()" [formGroup]="form" novalidate>
+        <label class="field">
+          <span class="field__label">Datum &amp; Uhrzeit *</span>
+          <input class="field__input" type="datetime-local" formControlName="dateTime" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Kommentar *</span>
+          <textarea class="field__input" rows="4" formControlName="comment"></textarea>
+        </label>
+
+        <div class="field">
+          <span class="field__label">Schwierigkeit *</span>
+          <div class="segmented" role="group">
+            @for (d of [1, 2, 3]; track d) {
+              <button
+                type="button"
+                class="seg"
+                [class.seg--on]="form.controls.difficulty.value === d"
+                (click)="setDifficulty(d)"
+              >
+                {{ d === 1 ? 'Leicht' : d === 2 ? 'Mittel' : 'Schwer' }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="field">
+            <span class="field__label">Distanz (km) *</span>
+            <input class="field__input" type="number" step="0.01" min="0" formControlName="totalDistance" />
+          </label>
+          <label class="field">
+            <span class="field__label">Gesamtzeit (h) *</span>
+            <input class="field__input" type="number" step="0.1" min="0" formControlName="totalTime" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Bewertung (1–5) *</span>
+          <input class="field__input" type="number" min="1" max="5" step="1" formControlName="rating" />
+        </label>
+      </form>
+    </section>
+
+    <aside class="side" aria-hidden="true">
+      @if (tour(); as t) {
+        <div class="side__stats">
+          <div class="stat">{{ t.distance | number : '1.1-1' }} km <span>DISTANZ</span></div>
+          <div class="stat">{{ t.estimatedTime | number : '1.1-1' }} h <span>EST. ZEIT</span></div>
+        </div>
+      }
+      <div class="map">
+        <p class="map__hint">Karte (Platzhalter)</p>
+      </div>
+    </aside>
+  </div>
+</div>
