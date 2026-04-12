@@ -1,0 +1,147 @@
+<div class="shell">
+  <app-app-header
+    [searchQuery]="searchQuery()"
+    (searchQueryChange)="onSearchChange($event)"
+  />
+
+  @if (errorMessage()) {
+    <div class="banner banner--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="sidebar__head">
+        <h2 class="sidebar__title">Meine Touren</h2>
+      </div>
+
+      <div class="filters" role="tablist" aria-label="Transportfilter">
+        @for (opt of transportOptions; track opt.id) {
+          <button
+            type="button"
+            class="filter"
+            [class.filter--active]="transportFilter() === opt.id"
+            (click)="setFilter(opt.id)"
+          >
+            {{ opt.label }}
+          </button>
+        }
+      </div>
+
+      <div class="list" role="list">
+        @if (loading()) {
+          <p class="muted">Lade Touren…</p>
+        } @else if (filteredTours().length === 0) {
+          <p class="muted">Keine Touren. Lege eine über „Neue Tour“ an.</p>
+        } @else {
+          @for (t of filteredTours(); track t.id) {
+            <button
+              type="button"
+              class="card"
+              [class.card--active]="selectedTourId() === t.id"
+              (click)="selectTour(t)"
+              role="listitem"
+            >
+              <span class="card__tag">{{ t.transportType }}</span>
+              <span class="card__title">{{ t.name }}</span>
+            </button>
+          }
+        }
+      </div>
+    </aside>
+
+    <section class="content">
+      @if (selectedTour(); as tour) {
+        <div class="map-area">
+          <div class="map-area__overlay">
+            <h1 class="map-area__title">{{ tour.name }}</h1>
+            <div class="metrics">
+              <app-metric-card
+                [label]="'Distanz'"
+                [value]="formatKm(tour.distance)"
+              />
+              <app-metric-card
+                [label]="'Est. Zeit'"
+                [value]="formatHours(tour.estimatedTime)"
+              />
+              <app-metric-card
+                [label]="'Logs'"
+                [value]="'' + logs().length"
+              />
+            </div>
+          </div>
+          <div class="map-placeholder" role="img" aria-label="Karten-Platzhalter">
+            <p>Karte (Leaflet / OpenRouteService folgt im Final)</p>
+          </div>
+        </div>
+
+        <div class="detail-panel">
+          <div class="detail-actions">
+            <button type="button" class="btn btn--danger" (click)="deleteSelected()">
+              Tour löschen
+            </button>
+            <a class="btn btn--ghost" [routerLink]="['/tours', tour.id, 'edit']">
+              Bearbeiten
+            </a>
+          </div>
+
+          <h3 class="detail-heading">Details</h3>
+          <dl class="detail-grid">
+            <dt>Von</dt>
+            <dd>{{ tour.fromLocation }}</dd>
+            <dt>Nach</dt>
+            <dd>{{ tour.toLocation }}</dd>
+            <dt>Beschreibung</dt>
+            <dd>{{ tour.description || '—' }}</dd>
+            <dt>Bild (URL)</dt>
+            <dd>{{ tour.imageUrl || '—' }}</dd>
+          </dl>
+
+          <div class="logs-head">
+            <h3 class="detail-heading">Tour-Logs ({{ logs().length }})</h3>
+            <a class="btn btn--primary btn--small" [routerLink]="['/tours', tour.id, 'logs', 'new']">
+              + Neuer Log
+            </a>
+          </div>
+
+          @if (logs().length === 0) {
+            <p class="muted">Noch keine Logs.</p>
+          } @else {
+            <ul class="log-list">
+              @for (log of logs(); track log.id) {
+                <li class="log-item">
+                  <div class="log-item__row">
+                    <strong>{{ logDateLabel(log.dateTime) }}</strong>
+                    <span class="muted">Schwierigkeit: {{ log.difficulty }}</span>
+                  </div>
+                  <p class="log-item__comment">{{ log.comment || '—' }}</p>
+                  <div class="log-item__meta muted">
+                    {{ formatKm(log.totalDistance) }} · {{ formatHours(log.totalTime) }} ·
+                    Rating {{ log.rating }}/5
+                  </div>
+                  <div class="log-item__actions">
+                    <a
+                      class="btn btn--small btn--ghost"
+                      [routerLink]="['/tours', tour.id, 'logs', log.id, 'edit']"
+                      >Bearbeiten</a
+                    >
+                    <button
+                      type="button"
+                      class="btn btn--small btn--danger-outline"
+                      (click)="deleteLog(tour.id!, log.id!)"
+                    >
+                      Löschen
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      } @else {
+        <div class="empty-main">
+          <p>Wähle eine Tour oder erstelle eine neue.</p>
+        </div>
+      }
+    </section>
+  </div>
+</div>
