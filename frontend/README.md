@@ -1,5 +1,9 @@
 # Frontend
 
+Kurs-/Teaminfos und Gesamt-README: **[../README.md](../README.md)** (Projektroot).
+
+---
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.5.
 
 ## Development server
