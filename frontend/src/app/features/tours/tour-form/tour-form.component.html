@@ -8,8 +8,12 @@
     </a>
     <div class="bar__tail">
       <div class="bar__actions">
-        <button type="submit" form="tour-form" class="btn btn--primary" [disabled]="saving">
-          Tour speichern
+        <button type="submit" form="tour-form" class="btn btn--primary" [disabled]="saving || loadingRoute">
+          @if (loadingRoute) {
+            <span class="spinner" aria-hidden="true"></span> Route wird geladen…
+          } @else {
+            Tour speichern
+          }
         </button>
         <button type="button" class="btn btn--ghost" (click)="cancel()">Abbrechen</button>
       </div>
@@ -28,9 +32,10 @@
       }
 
       <form id="tour-form" (ngSubmit)="submit()" [formGroup]="form" novalidate>
+
         <label class="field">
           <span class="field__label">Tourname *</span>
-          <input class="field__input" type="text" formControlName="name" />
+          <input class="field__input" type="text" formControlName="name" autocomplete="off" />
           @if (form.controls.name.touched && form.controls.name.invalid) {
             <span class="field__hint">Bitte einen Namen eingeben.</span>
           }
@@ -38,7 +43,7 @@
 
         <label class="field">
           <span class="field__label">Beschreibung</span>
-          <textarea class="field__input" rows="4" formControlName="description"></textarea>
+          <textarea class="field__input" rows="3" formControlName="description"></textarea>
         </label>
 
         <div class="field">
@@ -49,7 +54,7 @@
                 type="button"
                 class="seg"
                 [class.seg--on]="form.controls.transportType.value === opt"
-                (click)="form.controls.transportType.setValue(opt)"
+                (click)="setTransportType(opt)"
               >
                 {{ opt }}
               </button>
@@ -57,29 +62,110 @@
           </div>
         </div>
 
-        <label class="field">
+        <!-- From location with autocomplete -->
+        <div class="field">
           <span class="field__label">Startpunkt *</span>
-          <input class="field__input" type="text" formControlName="fromLocation" />
-        </label>
+          <div class="autocomplete">
+            <div class="autocomplete__input-wrap">
+              <input
+                class="field__input"
+                type="text"
+                formControlName="fromLocation"
+                autocomplete="off"
+                placeholder="z. B. Wien, Stephansplatz"
+                (input)="onFromInput($event)"
+                (blur)="hideFromSuggestions()"
+                (focus)="fromSuggestions.length > 0 && (showFromSuggestions = true)"
+              />
+              @if (loadingFrom) {
+                <span class="autocomplete__spinner" aria-hidden="true"></span>
+              }
+            </div>
+            @if (showFromSuggestions && fromSuggestions.length > 0) {
+              <ul class="suggestions" role="listbox">
+                @for (s of fromSuggestions; track s.label) {
+                  <li
+                    class="suggestion"
+                    role="option"
+                    (mousedown)="selectFrom(s)"
+                  >
+                    {{ s.label }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          @if (form.controls.fromLocation.touched && form.controls.fromLocation.invalid) {
+            <span class="field__hint">Bitte einen Startpunkt eingeben.</span>
+          }
+        </div>
 
-        <label class="field">
+        <!-- To location with autocomplete -->
+        <div class="field">
           <span class="field__label">Endpunkt *</span>
-          <input class="field__input" type="text" formControlName="toLocation" />
-        </label>
+          <div class="autocomplete">
+            <div class="autocomplete__input-wrap">
+              <input
+                class="field__input"
+                type="text"
+                formControlName="toLocation"
+                autocomplete="off"
+                placeholder="z. B. Graz, Hauptbahnhof"
+                (input)="onToInput($event)"
+                (blur)="hideToSuggestions()"
+                (focus)="toSuggestions.length > 0 && (showToSuggestions = true)"
+              />
+              @if (loadingTo) {
+                <span class="autocomplete__spinner" aria-hidden="true"></span>
+              }
+            </div>
+            @if (showToSuggestions && toSuggestions.length > 0) {
+              <ul class="suggestions" role="listbox">
+                @for (s of toSuggestions; track s.label) {
+                  <li
+                    class="suggestion"
+                    role="option"
+                    (mousedown)="selectTo(s)"
+                  >
+                    {{ s.label }}
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+          @if (form.controls.toLocation.touched && form.controls.toLocation.invalid) {
+            <span class="field__hint">Bitte einen Endpunkt eingeben.</span>
+          }
+        </div>
 
+        <!-- Auto-filled distance & time (read-only when loading) -->
         <div class="row">
           <label class="field">
-            <span class="field__label">Distanz (km) *</span>
-            <input class="field__input" type="number" step="0.1" min="0" formControlName="distance" />
-          </label>
-          <label class="field">
-            <span class="field__label">Geschätzte Zeit (h) *</span>
+            <span class="field__label">
+              Distanz (km) *
+              @if (loadingRoute) { <span class="field__loading">wird berechnet…</span> }
+            </span>
             <input
               class="field__input"
               type="number"
               step="0.1"
               min="0"
+              formControlName="distance"
+              [readonly]="loadingRoute"
+            />
+          </label>
+          <label class="field">
+            <span class="field__label">
+              Geschätzte Zeit (h) *
+              @if (loadingRoute) { <span class="field__loading">wird berechnet…</span> }
+            </span>
+            <input
+              class="field__input"
+              type="number"
+              step="0.01"
+              min="0"
               formControlName="estimatedTime"
+              [readonly]="loadingRoute"
             />
           </label>
         </div>
@@ -89,10 +175,6 @@
           <input class="field__input" type="url" formControlName="imageUrl" />
         </label>
 
-        <label class="field">
-          <span class="field__label">Routen-Info (Text/JSON-Platzhalter)</span>
-          <textarea class="field__input" rows="2" formControlName="routeInfo"></textarea>
-        </label>
       </form>
 
       <div class="summary">
@@ -101,14 +183,25 @@
           <div class="summary__label">Distanz</div>
         </div>
         <div class="summary__box">
-          <div class="summary__value">{{ form.controls.estimatedTime.value | number : '1.1-1' }} h</div>
+          <div class="summary__value">{{ form.controls.estimatedTime.value | number : '1.2-2' }} h</div>
           <div class="summary__label">Est. Zeit</div>
         </div>
       </div>
     </section>
 
-    <aside class="map" aria-hidden="true">
-      <p class="map__hint">Karten-Vorschau (Leaflet folgt im Final)</p>
+    <aside class="map" aria-label="Routenkarte">
+      @if (loadingRoute) {
+        <div class="map__loading">
+          <span class="spinner spinner--lg" aria-hidden="true"></span>
+          <p>Route wird berechnet…</p>
+        </div>
+      }
+      @if (!loadingRoute && routeErrorMessage) {
+        <div class="map__error">
+          <span>⚠ {{ routeErrorMessage }}</span>
+        </div>
+      }
+      <app-tour-route-map [routeGeoJson]="routeGeoJsonForMap()" />
     </aside>
   </div>
 </div>

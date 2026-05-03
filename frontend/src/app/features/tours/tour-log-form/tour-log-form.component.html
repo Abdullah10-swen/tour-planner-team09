@@ -85,7 +85,10 @@
         </div>
       }
       <div class="map">
-        <p class="map__hint">Karte (Platzhalter)</p>
+        <app-tour-route-map
+          [routeGeoJson]="tour()?.routeInfo ?? null"
+          aria-label="Routenkarte der Tour"
+        />
       </div>
     </aside>
   </div>

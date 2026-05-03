@@ -11,10 +11,11 @@ import { forkJoin, finalize } from 'rxjs';
 import { Tour } from '../../../core/models/tour.model';
 import { TourLog } from '../../../core/models/tour-log.model';
 import { TourApiService } from '../../../core/services/tour-api.service';
+import { TourRouteMapComponent } from '../../../shared/components/tour-route-map/tour-route-map.component';
 
 @Component({
   selector: 'app-tour-log-form',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TourRouteMapComponent],
   templateUrl: './tour-log-form.component.html',
   styleUrl: './tour-log-form.component.css',
 })

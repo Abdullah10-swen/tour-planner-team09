@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, fromEvent, of, takeUntil } from 'rxjs';
 
 import { Tour } from '../../../core/models/tour.model';
 import { TourLog } from '../../../core/models/tour-log.model';
 import { TourApiService } from '../../../core/services/tour-api.service';
 import { AppHeaderComponent } from '../../../shared/components/app-header/app-header.component';
 import { MetricCardComponent } from '../../../shared/components/metric-card/metric-card.component';
+import { TourRouteMapComponent } from '../../../shared/components/tour-route-map/tour-route-map.component';
 
 type TransportFilter = 'all' | 'bike' | 'hike' | 'run' | 'vacation';
 
@@ -21,14 +22,25 @@ const TRANSPORT_OPTIONS: { id: TransportFilter; label: string }[] = [
 
 @Component({
   selector: 'app-tour-dashboard',
-  imports: [CommonModule, RouterLink, AppHeaderComponent, MetricCardComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    AppHeaderComponent,
+    MetricCardComponent,
+    TourRouteMapComponent,
+  ],
   templateUrl: './tour-dashboard.component.html',
   styleUrl: './tour-dashboard.component.css',
 })
 export class TourDashboardComponent {
   private readonly api = inject(TourApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly ngZone = inject(NgZone);
 
   readonly transportOptions = TRANSPORT_OPTIONS;
+
+  /** Höhe des Kartenbereichs in Pixel – per Drag-Handle anpassbar. */
+  mapHeight = Math.round(window.innerHeight * 0.38);
 
   readonly tours = signal<Tour[]>([]);
   readonly selectedTourId = signal<number | null>(null);
@@ -176,6 +188,34 @@ export class TourDashboardComponent {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
+    });
+  }
+
+  onResizeStart(event: MouseEvent): void {
+    event.preventDefault();
+    const startY = event.clientY;
+    const startHeight = this.mapHeight;
+
+    // Während des Drags: Text-Selektion & Cursor global sperren
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ns-resize';
+
+    this.ngZone.runOutsideAngular(() => {
+      const up$ = fromEvent<MouseEvent>(document, 'mouseup');
+
+      fromEvent<MouseEvent>(document, 'mousemove')
+        .pipe(takeUntil(up$))
+        .subscribe({
+          next: (e) => {
+            const delta = e.clientY - startY;
+            this.mapHeight = Math.max(120, Math.min(startHeight + delta, window.innerHeight * 0.85));
+            this.cdr.detectChanges();
+          },
+          complete: () => {
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+          },
+        });
     });
   }
 }

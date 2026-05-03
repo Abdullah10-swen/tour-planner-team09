@@ -51,7 +51,7 @@
 
     <section class="content">
       @if (selectedTour(); as tour) {
-        <div class="map-area">
+        <div class="map-area" [style.height.px]="mapHeight">
           <div class="map-area__overlay">
             <h1 class="map-area__title">{{ tour.name }}</h1>
             <div class="metrics">
@@ -69,10 +69,21 @@
               />
             </div>
           </div>
-          <div class="map-placeholder" role="img" aria-label="Karten-Platzhalter">
-            <p>Karte (Leaflet / OpenRouteService folgt im Final)</p>
-          </div>
+          <app-tour-route-map
+            class="map-area__leaflet"
+            [routeGeoJson]="tour.routeInfo"
+            aria-label="Routenkarte"
+          />
         </div>
+
+        <div
+          class="resize-handle"
+          (mousedown)="onResizeStart($event)"
+          title="Ziehen um Kartenbereich zu vergrößern oder verkleinern"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Trennlinie verschieben"
+        ></div>
 
         <div class="detail-panel">
           <div class="detail-actions">

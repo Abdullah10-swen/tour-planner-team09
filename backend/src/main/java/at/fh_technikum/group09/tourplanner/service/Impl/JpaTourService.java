@@ -2,6 +2,7 @@ package at.fh_technikum.group09.tourplanner.service.Impl;
 
 import at.fh_technikum.group09.tourplanner.dal.TourDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourEntity;
+import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
 import org.springframework.stereotype.Service;
@@ -15,9 +16,11 @@ import java.util.List;
 public class JpaTourService implements TourService {
 
     private final TourDal tourDal;
+    private final OpenRouteTourRouteEnrichment routeEnrichment;
 
-    public JpaTourService(TourDal tourDal) {
+    public JpaTourService(TourDal tourDal, OpenRouteTourRouteEnrichment routeEnrichment) {
         this.tourDal = tourDal;
+        this.routeEnrichment = routeEnrichment;
     }
 
     @Override
@@ -40,6 +43,7 @@ public class JpaTourService implements TourService {
     public Tour createTour(Tour tour) {
         TourEntity entity = new TourEntity();
         copyTourFields(tour, entity);
+        routeEnrichment.enrichIfPossible(entity);
         TourEntity saved = tourDal.save(entity);
         return toTour(saved);
     }
@@ -48,6 +52,7 @@ public class JpaTourService implements TourService {
     public Tour updateTour(long id, Tour updated) {
         return tourDal.findById(id).map(existing -> {
             copyTourFields(updated, existing);
+            routeEnrichment.enrichIfPossible(existing);
             return toTour(tourDal.save(existing));
         }).orElse(null);
     }
