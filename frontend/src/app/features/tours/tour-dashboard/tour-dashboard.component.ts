@@ -81,7 +81,7 @@ export class TourDashboardComponent {
       .pipe(
         catchError(() => {
           this.errorMessage.set(
-            'Backend nicht erreichbar. Starte Spring Boot auf http://localhost:8080 .'
+            'Backend nicht erreichbar. Spring Boot muss auf Port 8080 laufen (Ordner backend: ./mvnw spring-boot:run). Postgres muss laufen (z. B. docker compose up -d). Danach ng serve neu starten.'
           );
           return of([] as Tour[]);
         }),

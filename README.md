@@ -1,6 +1,6 @@
 # TourPlaner
 
-Semesterprojekt **Tour Planner** in der Lehrveranstaltung **Software Engineering 2** (FH Technikum Wien): Web-Anwendung zur Planung von Touren (Bike, Hike, Run, Vacation) und Verwaltung von **Tour-Logs** (Angular-Frontend, Spring-Boot-Backend).
+Web-Anwendung zur Planung von Touren (Bike, Hike, Run, Vacation) und Verwaltung von **Tour-Logs** (Angular-Frontend, Spring-Boot-Backend).
 
 ## Git-Repository
 

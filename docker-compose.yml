@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tourplanner}
+      POSTGRES_USER: ${POSTGRES_USER:-tourplanner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in a .env file (see .env.example)}
+    volumes:
+      - tourplanner_pgdata:/var/lib/postgresql/data
+
+volumes:
+  tourplanner_pgdata:
