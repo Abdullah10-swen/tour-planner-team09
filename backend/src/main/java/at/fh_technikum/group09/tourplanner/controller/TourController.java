@@ -1,9 +1,7 @@
 package at.fh_technikum.group09.tourplanner.controller;
 
 import at.fh_technikum.group09.tourplanner.dto.TourDto;
-import at.fh_technikum.group09.tourplanner.dto.TourLogDto;
 import at.fh_technikum.group09.tourplanner.model.Tour;
-import at.fh_technikum.group09.tourplanner.model.TourLog;
 import at.fh_technikum.group09.tourplanner.service.TourService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,63 +66,6 @@ public class TourController {
 
     // endregion
 
-    // region Logs
-
-    @GetMapping("/{tourId}/logs")
-    public ResponseEntity<List<TourLogDto>> getLogsForTour(@PathVariable long tourId) {
-        Tour tour = tourService.getTourById(tourId);
-        if (tour == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        List<TourLogDto> logs = tourService.getLogsForTour(tourId)
-                .stream()
-                .map(this::toTourLogDto)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(logs);
-    }
-
-    @GetMapping("/{tourId}/logs/{logId}")
-    public ResponseEntity<TourLogDto> getLogById(@PathVariable long tourId, @PathVariable long logId) {
-        TourLog log = tourService.getLogById(tourId, logId);
-        if (log == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourLogDto(log));
-    }
-
-    @PostMapping("/{tourId}/logs")
-    public ResponseEntity<TourLogDto> createLog(@PathVariable long tourId, @RequestBody TourLogDto dto) {
-        TourLog created = tourService.createLog(tourId, toTourLog(dto));
-        if (created == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(toTourLogDto(created));
-    }
-
-    @PutMapping("/{tourId}/logs/{logId}")
-    public ResponseEntity<TourLogDto> updateLog(@PathVariable long tourId,
-                                                @PathVariable long logId,
-                                                @RequestBody TourLogDto dto) {
-        TourLog updated = tourService.updateLog(tourId, logId, toTourLog(dto));
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourLogDto(updated));
-    }
-
-    @DeleteMapping("/{tourId}/logs/{logId}")
-    public ResponseEntity<Void> deleteLog(@PathVariable long tourId, @PathVariable long logId) {
-        boolean deleted = tourService.deleteLog(tourId, logId);
-        if (!deleted) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.noContent().build();
-    }
-
-    // endregion
-
     private TourDto toTourDto(Tour tour) {
         TourDto dto = new TourDto();
         dto.setId(tour.getId());
@@ -153,32 +94,6 @@ public class TourController {
         tour.setImageUrl(dto.getImageUrl());
         tour.setRouteInfo(dto.getRouteInfo());
         return tour;
-    }
-
-    private TourLogDto toTourLogDto(TourLog log) {
-        TourLogDto dto = new TourLogDto();
-        dto.setId(log.getId());
-        dto.setTourId(log.getTourId());
-        dto.setDateTime(log.getDateTime());
-        dto.setComment(log.getComment());
-        dto.setDifficulty(log.getDifficulty());
-        dto.setTotalDistance(log.getTotalDistance());
-        dto.setTotalTime(log.getTotalTime());
-        dto.setRating(log.getRating());
-        return dto;
-    }
-
-    private TourLog toTourLog(TourLogDto dto) {
-        TourLog log = new TourLog();
-        log.setId(dto.getId());
-        log.setTourId(dto.getTourId());
-        log.setDateTime(dto.getDateTime());
-        log.setComment(dto.getComment());
-        log.setDifficulty(dto.getDifficulty());
-        log.setTotalDistance(dto.getTotalDistance());
-        log.setTotalTime(dto.getTotalTime());
-        log.setRating(dto.getRating());
-        return log;
     }
 }
 
