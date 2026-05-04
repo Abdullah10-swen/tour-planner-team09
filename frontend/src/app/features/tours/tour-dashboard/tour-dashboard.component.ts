@@ -61,24 +61,28 @@ export class TourDashboardComponent {
   readonly filteredTours = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
     const f = this.transportFilter();
-    return this.tours().filter((t) => {
-      if (f !== 'all' && t.transportType.toLowerCase() !== f) {
-        return false;
-      }
-      if (!q) {
-        return true;
-      }
-      const hay = [
-        t.name,
-        t.description,
-        t.fromLocation,
-        t.toLocation,
-        t.transportType,
-      ]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(q);
-    });
+    return this.tours()
+      .filter((t) => {
+        if (f !== 'all' && t.transportType.toLowerCase() !== f) {
+          return false;
+        }
+        if (!q) {
+          return true;
+        }
+        const hay = [
+          t.name,
+          t.description,
+          t.fromLocation,
+          t.toLocation,
+          t.transportType,
+          String(t.popularity ?? 0),
+          this.formatChildFriendliness(t.childFriendliness ?? 0),
+        ]
+          .join(' ')
+          .toLowerCase();
+        return hay.includes(q);
+      })
+      .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
   });
 
   constructor() {
@@ -177,6 +181,26 @@ export class TourDashboardComponent {
       return `${mm} min`;
     }
     return `${hh}h ${mm.toString().padStart(2, '0')} min`;
+  }
+
+  /** Returns a CSS modifier class for the difficulty badge. */
+  difficultyClass(d: number): string {
+    if (d <= 1) return 'badge--easy';
+    if (d === 2) return 'badge--medium';
+    return 'badge--hard';
+  }
+
+  /** Returns the German label for a difficulty value. */
+  difficultyLabel(d: number): string {
+    if (d <= 1) return 'Leicht';
+    if (d === 2) return 'Mittel';
+    return 'Schwer';
+  }
+
+  /** Converts a 0–1 child-friendliness score to a 5-star string. */
+  formatChildFriendliness(score: number): string {
+    const filled = Math.round(score * 5);
+    return '★'.repeat(filled) + '☆'.repeat(5 - filled);
   }
 
   logDateLabel(iso: string | null): string {

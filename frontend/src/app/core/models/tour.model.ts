@@ -9,4 +9,8 @@ export interface Tour {
   estimatedTime: number;
   imageUrl: string | null;
   routeInfo: string | null;
+  /** Number of tour logs – computed by backend. */
+  popularity?: number;
+  /** Child-friendliness score 0.0–1.0 – computed by backend. */
+  childFriendliness?: number;
 }

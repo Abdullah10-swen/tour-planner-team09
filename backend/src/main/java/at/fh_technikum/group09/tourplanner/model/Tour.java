@@ -19,4 +19,13 @@ public class Tour {
     private double estimatedTime; // Stunden
     private String imageUrl;
     private String routeInfo;
+
+    /** Number of tour logs – derived, not stored. */
+    private int popularity;
+
+    /**
+     * Child-friendliness score in [0.0, 1.0] – derived from average log
+     * difficulty, total time and total distance; not stored.
+     */
+    private double childFriendliness;
 }

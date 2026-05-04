@@ -78,6 +78,8 @@ public class TourController {
         dto.setEstimatedTime(tour.getEstimatedTime());
         dto.setImageUrl(tour.getImageUrl());
         dto.setRouteInfo(tour.getRouteInfo());
+        dto.setPopularity(tour.getPopularity());
+        dto.setChildFriendliness(tour.getChildFriendliness());
         return dto;
     }
 

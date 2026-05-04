@@ -43,6 +43,7 @@
             >
               <span class="card__tag">{{ t.transportType }}</span>
               <span class="card__title">{{ t.name }}</span>
+              <span class="card__meta muted">{{ t.popularity ?? 0 }} Log(s) · {{ formatChildFriendliness(t.childFriendliness ?? 0) }}</span>
             </button>
           }
         }
@@ -64,8 +65,12 @@
                 [value]="formatHours(tour.estimatedTime)"
               />
               <app-metric-card
-                [label]="'Logs'"
-                [value]="'' + logs().length"
+                [label]="'Beliebtheit'"
+                [value]="(tour.popularity ?? 0) + ' Log(s)'"
+              />
+              <app-metric-card
+                [label]="'Kinderfreundlich'"
+                [value]="formatChildFriendliness(tour.childFriendliness ?? 0)"
               />
             </div>
           </div>
@@ -105,6 +110,10 @@
             <dd>{{ tour.description || '—' }}</dd>
             <dt>Bild (URL)</dt>
             <dd>{{ tour.imageUrl || '—' }}</dd>
+            <dt>Beliebtheit</dt>
+            <dd>{{ tour.popularity ?? 0 }} Logs</dd>
+            <dt>Kinderfreundlich</dt>
+            <dd>{{ formatChildFriendliness(tour.childFriendliness ?? 0) }} ({{ ((tour.childFriendliness ?? 0) * 100) | number:'1.0-0' }}%)</dd>
           </dl>
 
           <div class="logs-head">
@@ -122,7 +131,9 @@
                 <li class="log-item">
                   <div class="log-item__row">
                     <strong>{{ logDateLabel(log.dateTime) }}</strong>
-                    <span class="muted">Schwierigkeit: {{ log.difficulty }}</span>
+                    <span class="badge" [ngClass]="difficultyClass(log.difficulty)">
+                      {{ difficultyLabel(log.difficulty) }}
+                    </span>
                   </div>
                   <p class="log-item__comment">{{ log.comment || '—' }}</p>
                   <div class="log-item__meta muted">

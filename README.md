@@ -33,8 +33,7 @@ Tours: `GET/POST/PUT/DELETE` unter `http://localhost:8080/api/tours` (siehe Cont
 
 ```bash
 cd frontend
-npm install
-npm start
+ng serve
 ```
 
 App: `http://localhost:4200`  

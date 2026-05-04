@@ -131,6 +131,15 @@
   color: #666;
 }
 
+.field__hint {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #999;
+  font-weight: 400;
+}
+
 .field__input {
   border: 1px solid #e8e4dc;
   border-radius: 12px;

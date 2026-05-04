@@ -1,7 +1,9 @@
 package at.fh_technikum.group09.tourplanner.service.Impl;
 
 import at.fh_technikum.group09.tourplanner.dal.TourDal;
+import at.fh_technikum.group09.tourplanner.dal.TourLogDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourEntity;
+import at.fh_technikum.group09.tourplanner.dal.entity.TourLogEntity;
 import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
@@ -16,10 +18,12 @@ import java.util.List;
 public class JpaTourService implements TourService {
 
     private final TourDal tourDal;
+    private final TourLogDal tourLogDal;
     private final OpenRouteTourRouteEnrichment routeEnrichment;
 
-    public JpaTourService(TourDal tourDal, OpenRouteTourRouteEnrichment routeEnrichment) {
+    public JpaTourService(TourDal tourDal, TourLogDal tourLogDal, OpenRouteTourRouteEnrichment routeEnrichment) {
         this.tourDal = tourDal;
+        this.tourLogDal = tourLogDal;
         this.routeEnrichment = routeEnrichment;
     }
 
@@ -79,6 +83,8 @@ public class JpaTourService implements TourService {
     }
 
     private Tour toTour(TourEntity e) {
+        List<TourLogEntity> logs = tourLogDal.findByTourIdOrderByDateTimeAsc(e.getId());
+
         Tour t = new Tour();
         t.setId(e.getId());
         t.setName(e.getName());
@@ -90,6 +96,40 @@ public class JpaTourService implements TourService {
         t.setEstimatedTime(e.getEstimatedTime());
         t.setImageUrl(e.getImageUrl());
         t.setRouteInfo(e.getRouteInfo());
+        t.setPopularity(logs.size());
+        t.setChildFriendliness(computeChildFriendliness(logs));
         return t;
+    }
+
+    /**
+     * Derives a child-friendliness score in [0.0, 1.0] from the tour logs.
+     *
+     * <p>Three factors are averaged, each normalised to [0, 1] where 1 = best:
+     * <ul>
+     *   <li>difficulty  (scale 1–3; 1=easy → 1.0, 3=hard → 0.0)</li>
+     *   <li>total time  (hours; 0 h → 1.0, ≥ 8 h → 0.0)</li>
+     *   <li>total distance (km; 0 km → 1.0, ≥ 30 km → 0.0)</li>
+     * </ul>
+     * Returns 0.0 when no logs are available.
+     */
+    private double computeChildFriendliness(List<TourLogEntity> logs) {
+        if (logs.isEmpty()) {
+            return 0.0;
+        }
+
+        double avgDifficulty = logs.stream().mapToInt(TourLogEntity::getDifficulty).average().orElse(1);
+        double avgTime       = logs.stream().mapToDouble(TourLogEntity::getTotalTime).average().orElse(0);
+        double avgDistance   = logs.stream().mapToDouble(TourLogEntity::getTotalDistance).average().orElse(0);
+
+        double diffScore = clamp(1.0 - (avgDifficulty - 1.0) / 2.0);
+        double timeScore = clamp(1.0 - avgTime / 8.0);
+        double distScore = clamp(1.0 - avgDistance / 30.0);
+
+        double raw = (diffScore + timeScore + distScore) / 3.0;
+        return Math.round(raw * 100.0) / 100.0;
+    }
+
+    private double clamp(double value) {
+        return Math.max(0.0, Math.min(1.0, value));
     }
 }
