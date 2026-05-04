@@ -360,6 +360,42 @@
   color: #333;
 }
 
+.image-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 0.5rem;
+  border: 1px solid #e8e4dc;
+}
+
+.field__file {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.btn--small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 0.4rem;
+}
+
+.btn--danger-outline {
+  background: transparent;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn--danger-outline:hover {
+  background: #c0392b;
+  color: #fff;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .layout {

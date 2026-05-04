@@ -108,8 +108,14 @@
             <dd>{{ tour.toLocation }}</dd>
             <dt>Beschreibung</dt>
             <dd>{{ tour.description || '—' }}</dd>
-            <dt>Bild (URL)</dt>
-            <dd>{{ tour.imageUrl || '—' }}</dd>
+            <dt>Bild</dt>
+            <dd>
+              @if (tour.imageUrl) {
+                <img class="tour-image" [src]="tour.imageUrl" alt="Tour-Bild" />
+              } @else {
+                —
+              }
+            </dd>
             <dt>Beliebtheit</dt>
             <dd>{{ tour.popularity ?? 0 }} Logs</dd>
             <dt>Kinderfreundlich</dt>

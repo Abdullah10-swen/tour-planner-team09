@@ -83,6 +83,18 @@ public class JpaTourService implements TourService {
     }
 
     @Override
+    public Tour updateImageUrl(long id, String imageUrl) {
+        try {
+            TourEntity existing = tourDal.findById(id)
+                    .orElseThrow(() -> new TourNotFoundException(id));
+            existing.setImageUrl(imageUrl);
+            return toTour(tourDal.save(existing));
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to update imageUrl for tour id=" + id, ex);
+        }
+    }
+
+    @Override
     public void deleteTour(long id) {
         try {
             if (!tourDal.existsById(id)) {

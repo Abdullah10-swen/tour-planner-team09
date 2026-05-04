@@ -75,6 +75,12 @@ public class OpenRouteTourRouteEnrichment {
         String to   = tour.getToLocation();
         if (from == null || from.isBlank() || to == null || to.isBlank()) return;
 
+        // Route already provided by the frontend preview – skip the redundant API call.
+        if (tour.getRouteInfo() != null && !tour.getRouteInfo().isBlank()) {
+            log.debug("enrichIfPossible: routeInfo already set, skipping ORS call.");
+            return;
+        }
+
         String profile = mapTransportToOrsProfile(tour.getTransportType());
         try {
             // Geocoding parallel ausführen

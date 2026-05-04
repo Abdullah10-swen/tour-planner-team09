@@ -50,4 +50,10 @@ export class TourApiService {
   deleteLog(tourId: number, logId: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/${tourId}/logs/${logId}`);
   }
+
+  uploadImage(tourId: number, file: File): Observable<{ imageUrl: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ imageUrl: string }>(`${this.base}/${tourId}/image`, formData);
+  }
 }

@@ -15,4 +15,6 @@ public interface TourService {
     Tour updateTour(long id, Tour updated);
 
     void deleteTour(long id);
+
+    Tour updateImageUrl(long id, String imageUrl);
 }

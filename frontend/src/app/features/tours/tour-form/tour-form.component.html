@@ -170,10 +170,24 @@
           </label>
         </div>
 
-        <label class="field">
-          <span class="field__label">Bild-URL</span>
-          <input class="field__input" type="url" formControlName="imageUrl" />
-        </label>
+        <div class="field">
+          <span class="field__label">Tour-Bild</span>
+          @if (imagePreviewUrl) {
+            <img class="image-preview" [src]="imagePreviewUrl ?? ''" alt="Vorschau neues Bild" />
+            <button type="button" class="btn btn--small btn--danger-outline" (click)="clearImage()">
+              Bild entfernen
+            </button>
+          } @else if (form.controls.imageUrl.value) {
+            <img class="image-preview" [src]="form.controls.imageUrl.value" alt="Aktuelles Tour-Bild" />
+            <button type="button" class="btn btn--small btn--danger-outline" (click)="clearImage()">
+              Bild entfernen
+            </button>
+          }
+          @if (!imagePreviewUrl && !form.controls.imageUrl.value) {
+            <input class="field__file" type="file" accept="image/*" (change)="onImageSelected($event)" />
+            <span class="field__hint">JPG oder PNG, max. 5 MB (optional)</span>
+          }
+        </div>
 
       </form>
 

@@ -73,6 +73,9 @@ export class TourFormComponent implements OnInit {
   routeErrorMessage: string | null = null;
   protected tourId: number | null = null;
 
+  selectedImageFile: File | null = null;
+  imagePreviewUrl: string | null = null;
+
   // Autocomplete state
   fromSuggestions: LocationSuggestion[] = [];
   toSuggestions: LocationSuggestion[] = [];
@@ -296,6 +299,25 @@ export class TourFormComponent implements OnInit {
     void this.router.navigate(['/']);
   }
 
+  clearImage(): void {
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+    }
+    this.imagePreviewUrl = null;
+    this.selectedImageFile = null;
+    this.form.controls.imageUrl.setValue('');
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedImageFile = file;
+    if (this.imagePreviewUrl) {
+      URL.revokeObjectURL(this.imagePreviewUrl);
+    }
+    this.imagePreviewUrl = file ? URL.createObjectURL(file) : null;
+  }
+
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -317,15 +339,24 @@ export class TourFormComponent implements OnInit {
     this.saving = true;
     this.errorMessage = null;
 
-    const req =
+    const save$ =
       this.tourId == null
         ? this.api.createTour(payload)
         : this.api.updateTour(this.tourId, { ...payload, id: this.tourId });
 
-    req
+    save$
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({
-        next: () => void this.router.navigate(['/']),
+        next: (savedTour) => {
+          if (this.selectedImageFile && savedTour.id != null) {
+            this.api.uploadImage(savedTour.id, this.selectedImageFile).subscribe({
+              complete: () => void this.router.navigate(['/']),
+              error: () => void this.router.navigate(['/'])
+            });
+          } else {
+            void this.router.navigate(['/']);
+          }
+        },
         error: () => {
           this.errorMessage = 'Speichern fehlgeschlagen.';
         },
