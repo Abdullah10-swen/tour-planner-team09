@@ -2,7 +2,9 @@ package at.fh_technikum.group09.tourplanner.dal.Impl;
 
 import at.fh_technikum.group09.tourplanner.dal.TourLogDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourLogEntity;
+import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import at.fh_technikum.group09.tourplanner.dal.repository.TourLogRepository;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,21 +21,37 @@ public class JpaTourLogDal implements TourLogDal {
 
     @Override
     public List<TourLogEntity> findByTourIdOrderByDateTimeAsc(long tourId) {
-        return tourLogRepository.findByTour_IdOrderByDateTimeAsc(tourId);
+        try {
+            return tourLogRepository.findByTour_IdOrderByDateTimeAsc(tourId);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to retrieve logs for tourId=" + tourId, ex);
+        }
     }
 
     @Override
     public Optional<TourLogEntity> findByIdAndTourId(long logId, long tourId) {
-        return tourLogRepository.findByIdAndTour_Id(logId, tourId);
+        try {
+            return tourLogRepository.findByIdAndTour_Id(logId, tourId);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to find log logId=" + logId + " for tourId=" + tourId, ex);
+        }
     }
 
     @Override
     public TourLogEntity save(TourLogEntity entity) {
-        return tourLogRepository.save(entity);
+        try {
+            return tourLogRepository.save(entity);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to save tour-log entity", ex);
+        }
     }
 
     @Override
     public void delete(TourLogEntity entity) {
-        tourLogRepository.delete(entity);
+        try {
+            tourLogRepository.delete(entity);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to delete tour-log entity", ex);
+        }
     }
 }

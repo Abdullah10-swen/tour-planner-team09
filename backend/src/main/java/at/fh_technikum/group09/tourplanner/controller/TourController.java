@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/tours")
-@CrossOrigin // für lokale Angular-Entwicklung
+@CrossOrigin
 public class TourController {
 
     private final TourService tourService;
@@ -20,8 +20,6 @@ public class TourController {
     public TourController(TourService tourService) {
         this.tourService = tourService;
     }
-
-    // region Tours
 
     @GetMapping
     public List<TourDto> getAllTours() {
@@ -32,12 +30,8 @@ public class TourController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<TourDto> getTourById(@PathVariable long id) {
-        Tour tour = tourService.getTourById(id);
-        if (tour == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourDto(tour));
+    public TourDto getTourById(@PathVariable long id) {
+        return toTourDto(tourService.getTourById(id));
     }
 
     @PostMapping
@@ -47,24 +41,15 @@ public class TourController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TourDto> updateTour(@PathVariable long id, @RequestBody TourDto dto) {
-        Tour updated = tourService.updateTour(id, toTour(dto));
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourDto(updated));
+    public TourDto updateTour(@PathVariable long id, @RequestBody TourDto dto) {
+        return toTourDto(tourService.updateTour(id, toTour(dto)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTour(@PathVariable long id) {
-        boolean deleted = tourService.deleteTour(id);
-        if (!deleted) {
-            return ResponseEntity.notFound().build();
-        }
+        tourService.deleteTour(id);
         return ResponseEntity.noContent().build();
     }
-
-    // endregion
 
     private TourDto toTourDto(Tour tour) {
         TourDto dto = new TourDto();
@@ -98,4 +83,3 @@ public class TourController {
         return tour;
     }
 }
-

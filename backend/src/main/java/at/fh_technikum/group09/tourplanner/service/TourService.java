@@ -14,5 +14,5 @@ public interface TourService {
 
     Tour updateTour(long id, Tour updated);
 
-    boolean deleteTour(long id);
+    void deleteTour(long id);
 }

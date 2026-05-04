@@ -7,6 +7,9 @@ import at.fh_technikum.group09.tourplanner.dal.entity.TourLogEntity;
 import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
+import at.fh_technikum.group09.tourplanner.service.exception.TourNotFoundException;
+import at.fh_technikum.group09.tourplanner.service.exception.TourServiceException;
+import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,44 +33,65 @@ public class JpaTourService implements TourService {
     @Override
     @Transactional(readOnly = true)
     public List<Tour> getAllTours() {
-        List<Tour> result = new ArrayList<>();
-        for (TourEntity e : tourDal.findAll()) {
-            result.add(toTour(e));
+        try {
+            List<Tour> result = new ArrayList<>();
+            for (TourEntity e : tourDal.findAll()) {
+                result.add(toTour(e));
+            }
+            return result;
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to retrieve tours", ex);
         }
-        return result;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Tour getTourById(long id) {
-        return tourDal.findById(id).map(this::toTour).orElse(null);
+        try {
+            return tourDal.findById(id)
+                    .map(this::toTour)
+                    .orElseThrow(() -> new TourNotFoundException(id));
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to retrieve tour id=" + id, ex);
+        }
     }
 
     @Override
     public Tour createTour(Tour tour) {
-        TourEntity entity = new TourEntity();
-        copyTourFields(tour, entity);
-        routeEnrichment.enrichIfPossible(entity);
-        TourEntity saved = tourDal.save(entity);
-        return toTour(saved);
+        try {
+            TourEntity entity = new TourEntity();
+            copyTourFields(tour, entity);
+            routeEnrichment.enrichIfPossible(entity);
+            TourEntity saved = tourDal.save(entity);
+            return toTour(saved);
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to create tour", ex);
+        }
     }
 
     @Override
     public Tour updateTour(long id, Tour updated) {
-        return tourDal.findById(id).map(existing -> {
+        try {
+            TourEntity existing = tourDal.findById(id)
+                    .orElseThrow(() -> new TourNotFoundException(id));
             copyTourFields(updated, existing);
             routeEnrichment.enrichIfPossible(existing);
             return toTour(tourDal.save(existing));
-        }).orElse(null);
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to update tour id=" + id, ex);
+        }
     }
 
     @Override
-    public boolean deleteTour(long id) {
-        if (!tourDal.existsById(id)) {
-            return false;
+    public void deleteTour(long id) {
+        try {
+            if (!tourDal.existsById(id)) {
+                throw new TourNotFoundException(id);
+            }
+            tourDal.deleteById(id);
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to delete tour id=" + id, ex);
         }
-        tourDal.deleteById(id);
-        return true;
     }
 
     private void copyTourFields(Tour from, TourEntity to) {

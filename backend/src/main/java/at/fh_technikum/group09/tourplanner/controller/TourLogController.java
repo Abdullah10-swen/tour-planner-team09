@@ -22,48 +22,34 @@ public class TourLogController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TourLogDto>> getLogsForTour(@PathVariable long tourId) {
+    public List<TourLogDto> getLogsForTour(@PathVariable long tourId) {
         return tourLogService.findAllByTourId(tourId)
-                .map(logs -> logs.stream().map(this::toTourLogDto).collect(Collectors.toList()))
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .stream()
+                .map(this::toTourLogDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{logId}")
-    public ResponseEntity<TourLogDto> getLogById(@PathVariable long tourId, @PathVariable long logId) {
-        TourLog log = tourLogService.getByTourIdAndLogId(tourId, logId);
-        if (log == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourLogDto(log));
+    public TourLogDto getLogById(@PathVariable long tourId, @PathVariable long logId) {
+        return toTourLogDto(tourLogService.getByTourIdAndLogId(tourId, logId));
     }
 
     @PostMapping
     public ResponseEntity<TourLogDto> createLog(@PathVariable long tourId, @RequestBody TourLogDto dto) {
         TourLog created = tourLogService.create(tourId, toTourLog(dto));
-        if (created == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.status(HttpStatus.CREATED).body(toTourLogDto(created));
     }
 
     @PutMapping("/{logId}")
-    public ResponseEntity<TourLogDto> updateLog(@PathVariable long tourId,
-                                                @PathVariable long logId,
-                                                @RequestBody TourLogDto dto) {
-        TourLog updated = tourLogService.update(tourId, logId, toTourLog(dto));
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(toTourLogDto(updated));
+    public TourLogDto updateLog(@PathVariable long tourId,
+                                @PathVariable long logId,
+                                @RequestBody TourLogDto dto) {
+        return toTourLogDto(tourLogService.update(tourId, logId, toTourLog(dto)));
     }
 
     @DeleteMapping("/{logId}")
     public ResponseEntity<Void> deleteLog(@PathVariable long tourId, @PathVariable long logId) {
-        boolean deleted = tourLogService.delete(tourId, logId);
-        if (!deleted) {
-            return ResponseEntity.notFound().build();
-        }
+        tourLogService.delete(tourId, logId);
         return ResponseEntity.noContent().build();
     }
 

@@ -2,7 +2,9 @@ package at.fh_technikum.group09.tourplanner.dal.Impl;
 
 import at.fh_technikum.group09.tourplanner.dal.TourDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourEntity;
+import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import at.fh_technikum.group09.tourplanner.dal.repository.TourRepository;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,26 +21,46 @@ public class JpaTourDal implements TourDal {
 
     @Override
     public List<TourEntity> findAll() {
-        return tourRepository.findAll();
+        try {
+            return tourRepository.findAll();
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to retrieve all tours", ex);
+        }
     }
 
     @Override
     public Optional<TourEntity> findById(long id) {
-        return tourRepository.findById(id);
+        try {
+            return tourRepository.findById(id);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to find tour by id=" + id, ex);
+        }
     }
 
     @Override
     public boolean existsById(long id) {
-        return tourRepository.existsById(id);
+        try {
+            return tourRepository.existsById(id);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to check existence for tour id=" + id, ex);
+        }
     }
 
     @Override
     public TourEntity save(TourEntity entity) {
-        return tourRepository.save(entity);
+        try {
+            return tourRepository.save(entity);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to save tour entity", ex);
+        }
     }
 
     @Override
     public void deleteById(long id) {
-        tourRepository.deleteById(id);
+        try {
+            tourRepository.deleteById(id);
+        } catch (DataAccessException ex) {
+            throw new TourDalException("Failed to delete tour id=" + id, ex);
+        }
     }
 }
