@@ -12,6 +12,10 @@
     <aside class="sidebar">
       <div class="sidebar__head">
         <h2 class="sidebar__title">Meine Touren</h2>
+        <button type="button" class="btn btn--green btn--small" (click)="triggerImport(importFileInput)" title="Touren aus JSON-Datei importieren">
+          Import
+        </button>
+        <input #importFileInput type="file" accept=".json,application/json" class="visually-hidden" (change)="onImportFileSelected($event)" />
       </div>
 
       <div class="filters" role="tablist" aria-label="Transportfilter">
@@ -43,7 +47,17 @@
             >
               <span class="card__tag">{{ t.transportType }}</span>
               <span class="card__title">{{ t.name }}</span>
-              <span class="card__meta muted">{{ t.popularity ?? 0 }} Log(s) · {{ formatChildFriendliness(t.childFriendliness ?? 0) }}</span>
+              <div class="card__footer">
+                <span class="card__meta muted">{{ t.popularity ?? 0 }} Log(s) · {{ formatChildFriendliness(t.childFriendliness ?? 0) }}</span>
+                <button
+                  type="button"
+                  class="btn btn--green btn--tiny"
+                  (click)="exportTour(t, $event)"
+                  title="Tour als JSON exportieren"
+                >
+                  Export
+                </button>
+              </div>
             </button>
           }
         }
@@ -98,6 +112,9 @@
             <a class="btn btn--ghost" [routerLink]="['/tours', tour.id, 'edit']">
               Bearbeiten
             </a>
+            <button type="button" class="btn btn--green" (click)="exportTour(tour, $event)" title="Tour als JSON exportieren">
+              Export
+            </button>
           </div>
 
           <h3 class="detail-heading">Details</h3>
@@ -106,6 +123,8 @@
             <dd>{{ tour.fromLocation }}</dd>
             <dt>Nach</dt>
             <dd>{{ tour.toLocation }}</dd>
+            <dt>Transportart</dt>
+            <dd>{{ tour.transportType }}</dd>
             <dt>Beschreibung</dt>
             <dd>{{ tour.description || '—' }}</dd>
             <dt>Bild</dt>

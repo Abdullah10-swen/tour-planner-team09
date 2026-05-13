@@ -215,6 +215,48 @@ export class TourDashboardComponent {
     });
   }
 
+  exportTour(tour: Tour, event: MouseEvent): void {
+    event.stopPropagation();
+    if (tour.id == null) return;
+    this.api.exportTour(tour.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tour-${tour.id}-export.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.errorMessage.set('Export fehlgeschlagen.'),
+    });
+  }
+
+  triggerImport(fileInput: HTMLInputElement): void {
+    fileInput.value = '';
+    fileInput.click();
+  }
+
+  onImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        const payload = Array.isArray(data) ? data : [data];
+        this.api.importTours(payload).subscribe({
+          next: () => this.refreshTours(),
+          error: () => this.errorMessage.set('Import fehlgeschlagen. Bitte gültige JSON-Datei wählen.'),
+        });
+      } catch {
+        this.errorMessage.set('Datei konnte nicht gelesen werden (kein gültiges JSON).');
+      }
+    };
+    reader.readAsText(file);
+  }
+
   onResizeStart(event: MouseEvent): void {
     event.preventDefault();
     const startY = event.clientY;

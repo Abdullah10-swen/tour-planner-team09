@@ -1,9 +1,13 @@
 package at.fh_technikum.group09.tourplanner.controller;
 
 import at.fh_technikum.group09.tourplanner.dto.TourDto;
+import at.fh_technikum.group09.tourplanner.dto.TourExportDto;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,6 +53,25 @@ public class TourController {
     public ResponseEntity<Void> deleteTour(@PathVariable long id) {
         tourService.deleteTour(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/export")
+    public ResponseEntity<TourExportDto> exportTour(@PathVariable long id) {
+        TourExportDto data = tourService.exportTourById(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename("tour-" + id + "-export.json")
+                        .build());
+        return ResponseEntity.ok().headers(headers).body(data);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<List<TourDto>> importTours(@RequestBody List<TourExportDto> exports) {
+        List<Tour> imported = tourService.importTours(exports);
+        List<TourDto> result = imported.stream().map(this::toTourDto).collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     private TourDto toTourDto(Tour tour) {

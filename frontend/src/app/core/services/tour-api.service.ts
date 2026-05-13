@@ -56,4 +56,12 @@ export class TourApiService {
     formData.append('file', file);
     return this.http.post<{ imageUrl: string }>(`${this.base}/${tourId}/image`, formData);
   }
+
+  exportTour(tourId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/${tourId}/export`, { responseType: 'blob' });
+  }
+
+  importTours(data: unknown[]): Observable<Tour[]> {
+    return this.http.post<Tour[]>(`${this.base}/import`, data);
+  }
 }

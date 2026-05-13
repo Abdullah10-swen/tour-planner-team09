@@ -4,6 +4,8 @@ import at.fh_technikum.group09.tourplanner.dal.TourDal;
 import at.fh_technikum.group09.tourplanner.dal.TourLogDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourEntity;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourLogEntity;
+import at.fh_technikum.group09.tourplanner.dto.TourExportDto;
+import at.fh_technikum.group09.tourplanner.dto.TourLogExportDto;
 import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
@@ -13,6 +15,7 @@ import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +106,82 @@ public class JpaTourService implements TourService {
             tourDal.deleteById(id);
         } catch (TourDalException ex) {
             throw new TourServiceException("Failed to delete tour id=" + id, ex);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TourExportDto exportTourById(long id) {
+        try {
+            TourEntity entity = tourDal.findById(id)
+                    .orElseThrow(() -> new TourNotFoundException(id));
+
+            TourExportDto dto = new TourExportDto();
+            dto.setName(entity.getName());
+            dto.setDescription(entity.getDescription());
+            dto.setFromLocation(entity.getFromLocation());
+            dto.setToLocation(entity.getToLocation());
+            dto.setTransportType(entity.getTransportType());
+            dto.setDistance(entity.getDistance());
+            dto.setEstimatedTime(entity.getEstimatedTime());
+            dto.setImageUrl(entity.getImageUrl());
+            dto.setRouteInfo(entity.getRouteInfo());
+
+            List<TourLogExportDto> logDtos = new ArrayList<>();
+            for (TourLogEntity log : tourLogDal.findByTourIdOrderByDateTimeAsc(entity.getId())) {
+                TourLogExportDto logDto = new TourLogExportDto();
+                logDto.setDateTime(log.getDateTime());
+                logDto.setComment(log.getComment());
+                logDto.setDifficulty(log.getDifficulty());
+                logDto.setTotalDistance(log.getTotalDistance());
+                logDto.setTotalTime(log.getTotalTime());
+                logDto.setRating(log.getRating());
+                logDtos.add(logDto);
+            }
+            dto.setLogs(logDtos);
+            return dto;
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to export tour id=" + id, ex);
+        }
+    }
+
+    @Override
+    public List<Tour> importTours(List<TourExportDto> exports) {
+        try {
+            List<Tour> imported = new ArrayList<>();
+            for (TourExportDto dto : exports) {
+                TourEntity entity = new TourEntity();
+                entity.setName(dto.getName());
+                entity.setDescription(dto.getDescription());
+                entity.setFromLocation(dto.getFromLocation());
+                entity.setToLocation(dto.getToLocation());
+                entity.setTransportType(dto.getTransportType());
+                entity.setDistance(dto.getDistance());
+                entity.setEstimatedTime(dto.getEstimatedTime());
+                entity.setImageUrl(dto.getImageUrl());
+                entity.setRouteInfo(dto.getRouteInfo());
+
+                TourEntity saved = tourDal.save(entity);
+
+                if (dto.getLogs() != null) {
+                    for (TourLogExportDto logDto : dto.getLogs()) {
+                        TourLogEntity log = new TourLogEntity();
+                        log.setTour(saved);
+                        log.setDateTime(logDto.getDateTime() != null ? logDto.getDateTime() : LocalDateTime.now());
+                        log.setComment(logDto.getComment());
+                        log.setDifficulty(logDto.getDifficulty());
+                        log.setTotalDistance(logDto.getTotalDistance());
+                        log.setTotalTime(logDto.getTotalTime());
+                        log.setRating(logDto.getRating());
+                        tourLogDal.save(log);
+                    }
+                }
+
+                imported.add(toTour(saved));
+            }
+            return imported;
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to import tours", ex);
         }
     }
 

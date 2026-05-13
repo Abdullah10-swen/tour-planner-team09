@@ -33,6 +33,10 @@
 
 .sidebar__head {
   padding: 1rem 1rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .sidebar__title {
@@ -94,6 +98,14 @@
 .card--active {
   border-color: #1b4332;
   box-shadow: 0 0 0 1px #1b4332 inset;
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .card__tag {
@@ -352,6 +364,15 @@
   color: #333;
 }
 
+.btn--green {
+  background: #1b4332;
+  color: #fff;
+}
+
+.btn--green:hover {
+  background: #14532d;
+}
+
 .btn--danger {
   background: transparent;
   color: #b91c1c;
@@ -361,6 +382,21 @@
 .btn--small {
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
+}
+
+.btn--tiny {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  line-height: 1.3;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {
