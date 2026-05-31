@@ -24,7 +24,29 @@
     <a routerLink="/tours/new" class="btn btn--primary">+ Neue Tour</a>
   </div>
 
-  <div class="header__right" aria-hidden="true">
-    <span class="avatar">A</span>
+  <div class="header__right">
+    <div class="user-menu">
+      <button
+        class="avatar"
+        (click)="toggleDropdown()"
+        [attr.aria-expanded]="dropdownOpen()"
+        aria-haspopup="true"
+        [title]="username"
+      >{{ initial }}</button>
+
+      @if (dropdownOpen()) {
+        <div class="user-menu__dropdown">
+          <div class="user-menu__info">
+            <span class="user-menu__initial">{{ initial }}</span>
+            <span class="user-menu__name">{{ username }}</span>
+          </div>
+          <hr class="user-menu__divider" />
+          <button class="user-menu__logout" (click)="logout()">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Abmelden
+          </button>
+        </div>
+      }
+    </div>
   </div>
 </header>
