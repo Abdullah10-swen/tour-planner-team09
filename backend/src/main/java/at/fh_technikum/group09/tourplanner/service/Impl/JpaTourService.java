@@ -4,6 +4,7 @@ import at.fh_technikum.group09.tourplanner.dal.TourDal;
 import at.fh_technikum.group09.tourplanner.dal.TourLogDal;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourEntity;
 import at.fh_technikum.group09.tourplanner.dal.entity.TourLogEntity;
+import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import at.fh_technikum.group09.tourplanner.dto.TourExportDto;
 import at.fh_technikum.group09.tourplanner.dto.TourLogExportDto;
 import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
@@ -11,7 +12,6 @@ import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
 import at.fh_technikum.group09.tourplanner.service.exception.TourNotFoundException;
 import at.fh_technikum.group09.tourplanner.service.exception.TourServiceException;
-import at.fh_technikum.group09.tourplanner.dal.exception.TourDalException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,23 +35,23 @@ public class JpaTourService implements TourService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Tour> getAllTours() {
+    public List<Tour> getAllTours(long userId) {
         try {
             List<Tour> result = new ArrayList<>();
-            for (TourEntity e : tourDal.findAll()) {
+            for (TourEntity e : tourDal.findAllByUserId(userId)) {
                 result.add(toTour(e));
             }
             return result;
         } catch (TourDalException ex) {
-            throw new TourServiceException("Failed to retrieve tours", ex);
+            throw new TourServiceException("Failed to retrieve tours for userId=" + userId, ex);
         }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Tour getTourById(long id) {
+    public Tour getTourById(long id, long userId) {
         try {
-            return tourDal.findById(id)
+            return tourDal.findByIdAndUserId(id, userId)
                     .map(this::toTour)
                     .orElseThrow(() -> new TourNotFoundException(id));
         } catch (TourDalException ex) {
@@ -60,9 +60,10 @@ public class JpaTourService implements TourService {
     }
 
     @Override
-    public Tour createTour(Tour tour) {
+    public Tour createTour(Tour tour, long userId) {
         try {
             TourEntity entity = new TourEntity();
+            entity.setUserId(userId);
             copyTourFields(tour, entity);
             routeEnrichment.enrichIfPossible(entity);
             TourEntity saved = tourDal.save(entity);
@@ -73,9 +74,9 @@ public class JpaTourService implements TourService {
     }
 
     @Override
-    public Tour updateTour(long id, Tour updated) {
+    public Tour updateTour(long id, Tour updated, long userId) {
         try {
-            TourEntity existing = tourDal.findById(id)
+            TourEntity existing = tourDal.findByIdAndUserId(id, userId)
                     .orElseThrow(() -> new TourNotFoundException(id));
             copyTourFields(updated, existing);
             routeEnrichment.enrichIfPossible(existing);
@@ -86,9 +87,9 @@ public class JpaTourService implements TourService {
     }
 
     @Override
-    public Tour updateImageUrl(long id, String imageUrl) {
+    public Tour updateImageUrl(long id, String imageUrl, long userId) {
         try {
-            TourEntity existing = tourDal.findById(id)
+            TourEntity existing = tourDal.findByIdAndUserId(id, userId)
                     .orElseThrow(() -> new TourNotFoundException(id));
             existing.setImageUrl(imageUrl);
             return toTour(tourDal.save(existing));
@@ -98,9 +99,9 @@ public class JpaTourService implements TourService {
     }
 
     @Override
-    public void deleteTour(long id) {
+    public void deleteTour(long id, long userId) {
         try {
-            if (!tourDal.existsById(id)) {
+            if (!tourDal.existsByIdAndUserId(id, userId)) {
                 throw new TourNotFoundException(id);
             }
             tourDal.deleteById(id);
@@ -111,9 +112,9 @@ public class JpaTourService implements TourService {
 
     @Override
     @Transactional(readOnly = true)
-    public TourExportDto exportTourById(long id) {
+    public TourExportDto exportTourById(long id, long userId) {
         try {
-            TourEntity entity = tourDal.findById(id)
+            TourEntity entity = tourDal.findByIdAndUserId(id, userId)
                     .orElseThrow(() -> new TourNotFoundException(id));
 
             TourExportDto dto = new TourExportDto();
@@ -146,11 +147,12 @@ public class JpaTourService implements TourService {
     }
 
     @Override
-    public List<Tour> importTours(List<TourExportDto> exports) {
+    public List<Tour> importTours(List<TourExportDto> exports, long userId) {
         try {
             List<Tour> imported = new ArrayList<>();
             for (TourExportDto dto : exports) {
                 TourEntity entity = new TourEntity();
+                entity.setUserId(userId);
                 entity.setName(dto.getName());
                 entity.setDescription(dto.getDescription());
                 entity.setFromLocation(dto.getFromLocation());

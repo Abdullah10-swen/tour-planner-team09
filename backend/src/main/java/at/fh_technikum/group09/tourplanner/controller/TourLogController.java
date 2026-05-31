@@ -5,6 +5,8 @@ import at.fh_technikum.group09.tourplanner.model.TourLog;
 import at.fh_technikum.group09.tourplanner.service.TourLogService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +25,7 @@ public class TourLogController {
 
     @GetMapping
     public List<TourLogDto> getLogsForTour(@PathVariable long tourId) {
-        return tourLogService.findAllByTourId(tourId)
+        return tourLogService.findAllByTourId(tourId, currentUserId())
                 .stream()
                 .map(this::toTourLogDto)
                 .collect(Collectors.toList());
@@ -31,12 +33,12 @@ public class TourLogController {
 
     @GetMapping("/{logId}")
     public TourLogDto getLogById(@PathVariable long tourId, @PathVariable long logId) {
-        return toTourLogDto(tourLogService.getByTourIdAndLogId(tourId, logId));
+        return toTourLogDto(tourLogService.getByTourIdAndLogId(tourId, logId, currentUserId()));
     }
 
     @PostMapping
     public ResponseEntity<TourLogDto> createLog(@PathVariable long tourId, @RequestBody TourLogDto dto) {
-        TourLog created = tourLogService.create(tourId, toTourLog(dto));
+        TourLog created = tourLogService.create(tourId, toTourLog(dto), currentUserId());
         return ResponseEntity.status(HttpStatus.CREATED).body(toTourLogDto(created));
     }
 
@@ -44,13 +46,19 @@ public class TourLogController {
     public TourLogDto updateLog(@PathVariable long tourId,
                                 @PathVariable long logId,
                                 @RequestBody TourLogDto dto) {
-        return toTourLogDto(tourLogService.update(tourId, logId, toTourLog(dto)));
+        return toTourLogDto(tourLogService.update(tourId, logId, toTourLog(dto), currentUserId()));
     }
 
     @DeleteMapping("/{logId}")
     public ResponseEntity<Void> deleteLog(@PathVariable long tourId, @PathVariable long logId) {
-        tourLogService.delete(tourId, logId);
+        tourLogService.delete(tourId, logId, currentUserId());
         return ResponseEntity.noContent().build();
+    }
+
+    private long currentUserId() {
+        UsernamePasswordAuthenticationToken auth =
+                (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        return (Long) auth.getDetails();
     }
 
     private TourLogDto toTourLogDto(TourLog log) {

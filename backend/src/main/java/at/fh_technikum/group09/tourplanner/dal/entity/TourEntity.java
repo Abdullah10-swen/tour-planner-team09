@@ -51,6 +51,9 @@ public class TourEntity {
     @Column(name = "route_info", columnDefinition = "TEXT")
     private String routeInfo;
 
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TourLogEntity> logs = new ArrayList<>();
 }

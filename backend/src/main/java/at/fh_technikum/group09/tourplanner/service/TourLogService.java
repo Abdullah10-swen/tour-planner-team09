@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface TourLogService {
 
-    List<TourLog> findAllByTourId(long tourId);
+    List<TourLog> findAllByTourId(long tourId, long userId);
 
-    TourLog getByTourIdAndLogId(long tourId, long logId);
+    TourLog getByTourIdAndLogId(long tourId, long logId, long userId);
 
-    TourLog create(long tourId, TourLog log);
+    TourLog create(long tourId, TourLog log, long userId);
 
-    TourLog update(long tourId, long logId, TourLog updated);
+    TourLog update(long tourId, long logId, TourLog updated, long userId);
 
-    void delete(long tourId, long logId);
+    void delete(long tourId, long logId, long userId);
 }

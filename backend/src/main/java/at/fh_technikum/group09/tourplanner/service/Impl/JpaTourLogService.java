@@ -31,11 +31,9 @@ public class JpaTourLogService implements TourLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TourLog> findAllByTourId(long tourId) {
+    public List<TourLog> findAllByTourId(long tourId, long userId) {
         try {
-            if (!tourDal.existsById(tourId)) {
-                throw new TourNotFoundException(tourId);
-            }
+            verifyTourOwnership(tourId, userId);
             List<TourLog> out = new ArrayList<>();
             for (TourLogEntity le : tourLogDal.findByTourIdOrderByDateTimeAsc(tourId)) {
                 out.add(toTourLog(le, tourId));
@@ -48,8 +46,9 @@ public class JpaTourLogService implements TourLogService {
 
     @Override
     @Transactional(readOnly = true)
-    public TourLog getByTourIdAndLogId(long tourId, long logId) {
+    public TourLog getByTourIdAndLogId(long tourId, long logId, long userId) {
         try {
+            verifyTourOwnership(tourId, userId);
             return tourLogDal.findByIdAndTourId(logId, tourId)
                     .map(le -> toTourLog(le, tourId))
                     .orElseThrow(() -> new TourLogNotFoundException(logId, tourId));
@@ -59,9 +58,9 @@ public class JpaTourLogService implements TourLogService {
     }
 
     @Override
-    public TourLog create(long tourId, TourLog log) {
+    public TourLog create(long tourId, TourLog log, long userId) {
         try {
-            TourEntity tour = tourDal.findById(tourId)
+            TourEntity tour = tourDal.findByIdAndUserId(tourId, userId)
                     .orElseThrow(() -> new TourNotFoundException(tourId));
             TourLogEntity entity = new TourLogEntity();
             entity.setTour(tour);
@@ -76,8 +75,9 @@ public class JpaTourLogService implements TourLogService {
     }
 
     @Override
-    public TourLog update(long tourId, long logId, TourLog updated) {
+    public TourLog update(long tourId, long logId, TourLog updated, long userId) {
         try {
+            verifyTourOwnership(tourId, userId);
             TourLogEntity existing = tourLogDal.findByIdAndTourId(logId, tourId)
                     .orElseThrow(() -> new TourLogNotFoundException(logId, tourId));
             copyLogFields(updated, existing);
@@ -91,13 +91,20 @@ public class JpaTourLogService implements TourLogService {
     }
 
     @Override
-    public void delete(long tourId, long logId) {
+    public void delete(long tourId, long logId, long userId) {
         try {
+            verifyTourOwnership(tourId, userId);
             TourLogEntity entity = tourLogDal.findByIdAndTourId(logId, tourId)
                     .orElseThrow(() -> new TourLogNotFoundException(logId, tourId));
             tourLogDal.delete(entity);
         } catch (TourDalException ex) {
             throw new TourServiceException("Failed to delete logId=" + logId + " for tourId=" + tourId, ex);
+        }
+    }
+
+    private void verifyTourOwnership(long tourId, long userId) {
+        if (!tourDal.existsByIdAndUserId(tourId, userId)) {
+            throw new TourNotFoundException(tourId);
         }
     }
 
