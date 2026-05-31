@@ -8,6 +8,8 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,19 +46,20 @@ public class ImageController {
             return ResponseEntity.badRequest().body(Map.of("error", "No file provided"));
         }
 
-        String oldUrl = tourService.getTourById(id).getImageUrl();
+        long userId = currentUserId();
+        String oldUrl = tourService.getTourById(id, userId).getImageUrl();
         if (oldUrl != null) {
             imageStorageService.deleteByUrl(oldUrl);
         }
 
         String imageUrl = imageStorageService.store(id, file);
-        tourService.updateImageUrl(id, imageUrl);
+        tourService.updateImageUrl(id, imageUrl, userId);
         log.info("Image uploaded for tourId={}: {}", id, imageUrl);
 
         return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
-    /** Serves a stored image file by filename. */
+    /** Serves a stored image file by filename. Public endpoint – no auth required. */
     @GetMapping("/api/images/{filename:.+}")
     public ResponseEntity<Resource> serveImage(@PathVariable String filename) {
         Path filePath = imageStorageService.load(filename);
@@ -83,5 +86,11 @@ public class ImageController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(resource);
+    }
+
+    private long currentUserId() {
+        UsernamePasswordAuthenticationToken auth =
+                (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        return (Long) auth.getDetails();
     }
 }

@@ -20,29 +20,29 @@ public class JpaTourDal implements TourDal {
     }
 
     @Override
-    public List<TourEntity> findAll() {
+    public List<TourEntity> findAllByUserId(long userId) {
         try {
-            return tourRepository.findAll();
+            return tourRepository.findAllByUserId(userId);
         } catch (DataAccessException ex) {
-            throw new TourDalException("Failed to retrieve all tours", ex);
+            throw new TourDalException("Failed to retrieve tours for userId=" + userId, ex);
         }
     }
 
     @Override
-    public Optional<TourEntity> findById(long id) {
+    public Optional<TourEntity> findByIdAndUserId(long id, long userId) {
         try {
-            return tourRepository.findById(id);
+            return tourRepository.findByIdAndUserId(id, userId);
         } catch (DataAccessException ex) {
-            throw new TourDalException("Failed to find tour by id=" + id, ex);
+            throw new TourDalException("Failed to find tour id=" + id + " for userId=" + userId, ex);
         }
     }
 
     @Override
-    public boolean existsById(long id) {
+    public boolean existsByIdAndUserId(long id, long userId) {
         try {
-            return tourRepository.existsById(id);
+            return tourRepository.existsByIdAndUserId(id, userId);
         } catch (DataAccessException ex) {
-            throw new TourDalException("Failed to check existence for tour id=" + id, ex);
+            throw new TourDalException("Failed to check existence for tour id=" + id + " userId=" + userId, ex);
         }
     }
 

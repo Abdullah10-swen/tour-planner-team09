@@ -7,11 +7,11 @@ import java.util.Optional;
 
 public interface TourDal {
 
-    List<TourEntity> findAll();
+    List<TourEntity> findAllByUserId(long userId);
 
-    Optional<TourEntity> findById(long id);
+    Optional<TourEntity> findByIdAndUserId(long id, long userId);
 
-    boolean existsById(long id);
+    boolean existsByIdAndUserId(long id, long userId);
 
     TourEntity save(TourEntity entity);
 
