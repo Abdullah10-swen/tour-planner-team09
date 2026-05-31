@@ -1,0 +1,129 @@
+<div class="auth-shell">
+
+  <!-- Left hero panel -->
+  <div class="auth-hero">
+    <div class="auth-hero__logo">
+      <div class="auth-hero__logo-icon">
+        <i class="fa-solid fa-briefcase"></i>
+      </div>
+      <div class="auth-hero__logo-text">
+        <span class="auth-hero__logo-name">TourPlaner</span>
+        <span class="auth-hero__logo-tagline">Plan &bull; Explore &bull; Log</span>
+      </div>
+    </div>
+
+    <div class="auth-hero__headline">
+      <p class="auth-hero__line">Deine Touren.</p>
+      <p class="auth-hero__line auth-hero__line--accent">Deine</p>
+      <p class="auth-hero__line auth-hero__line--accent">Abenteuer.</p>
+    </div>
+  </div>
+
+  <!-- Right form panel -->
+  <div class="auth-form-panel">
+
+    <!-- Mode toggle -->
+    <div class="auth-toggle">
+      <button
+        class="auth-toggle__btn"
+        [class.auth-toggle__btn--active]="mode() === 'login'"
+        (click)="setMode('login')"
+        type="button"
+      >Einloggen</button>
+      <button
+        class="auth-toggle__btn"
+        [class.auth-toggle__btn--active]="mode() === 'register'"
+        (click)="setMode('register')"
+        type="button"
+      >Registrieren</button>
+    </div>
+
+    <h1 class="auth-heading">
+      {{ mode() === 'login' ? 'Willkommen zurück' : 'Konto erstellen' }}
+    </h1>
+
+    <form class="auth-form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Username field (both modes) -->
+      <div class="auth-field">
+        <label class="auth-field__label" for="username">Benutzername</label>
+        <input
+          id="username"
+          class="auth-field__input"
+          type="text"
+          autocomplete="username"
+          [(ngModel)]="username"
+          name="username"
+          placeholder=""
+        />
+      </div>
+
+      <!-- Email (register only) -->
+      @if (mode() === 'register') {
+        <div class="auth-field">
+          <label class="auth-field__label" for="email">E-Mail-Adresse</label>
+          <input
+            id="email"
+            class="auth-field__input"
+            type="email"
+            autocomplete="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder=""
+          />
+        </div>
+      }
+
+      <!-- Password -->
+      <div class="auth-field">
+        <div class="auth-field__row">
+          <label class="auth-field__label" for="password">Passwort</label>
+          @if (mode() === 'login') {
+            <a class="auth-field__forgot" href="#">Passwort vergessen?</a>
+          }
+        </div>
+        <input
+          id="password"
+          class="auth-field__input"
+          type="password"
+          autocomplete="current-password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder=""
+        />
+      </div>
+
+      <!-- Confirm password (register only) -->
+      @if (mode() === 'register') {
+        <div class="auth-field">
+          <label class="auth-field__label" for="confirmPassword">Passwort (wiederholen)</label>
+          <input
+            id="confirmPassword"
+            class="auth-field__input"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder=""
+          />
+        </div>
+      }
+
+      <!-- Error message -->
+      @if (errorMessage()) {
+        <p class="auth-error">{{ errorMessage() }}</p>
+      }
+
+      <!-- Submit -->
+      <button class="auth-submit" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          <span>Bitte warten…</span>
+        } @else {
+          <span>{{ mode() === 'login' ? 'Einloggen' : 'Registrieren' }} &rarr;</span>
+        }
+      </button>
+
+    </form>
+  </div>
+
+</div>

@@ -18,9 +18,10 @@ Web-Anwendung zur Planung von Touren (Bike, Hike, Run, Vacation) und Verwaltung 
 - **Backend:** JDK (Projekt: Java 25, siehe `pom.xml`), Maven oder Wrapper `mvnw` / `mvnw.cmd`
 - **Frontend:** Node.js + npm (siehe `frontend/package.json` für Versionen)
 
-## Backend starten
+## Docker und Backend starten
 
 ```bash
+docker compose up -d
 cd backend
 ./mvnw.cmd spring-boot:run   # Windows
 # ./mvnw spring-boot:run     # Linux/macOS
