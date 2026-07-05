@@ -3,6 +3,8 @@ package at.fh_technikum.group09.tourplanner.controller;
 import at.fh_technikum.group09.tourplanner.dto.LocationSuggestionDto;
 import at.fh_technikum.group09.tourplanner.dto.RoutePreviewDto;
 import at.fh_technikum.group09.tourplanner.integration.openroute.OpenRouteTourRouteEnrichment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,8 @@ import java.util.List;
 @RequestMapping("/api")
 @CrossOrigin
 public class GeocodingController {
+
+    private static final Logger log = LoggerFactory.getLogger(GeocodingController.class);
 
     private final OpenRouteTourRouteEnrichment enrichment;
 
@@ -25,6 +29,7 @@ public class GeocodingController {
      */
     @GetMapping("/geocode/search")
     public List<LocationSuggestionDto> searchLocations(@RequestParam("q") String q) {
+        log.debug("GET /api/geocode/search q='{}'", q);
         return enrichment.searchLocations(q);
     }
 
@@ -49,6 +54,7 @@ public class GeocodingController {
 
         // Koordinaten-Pfad: nur ein einziger HTTP-Call nötig
         if (fromLon != null && fromLat != null && toLon != null && toLat != null) {
+            log.debug("GET /api/route-preview by coordinates transport='{}'", transport);
             return enrichment.previewRouteByCoordinates(fromLon, fromLat, toLon, toLat, transport)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.noContent().build());
@@ -56,11 +62,13 @@ public class GeocodingController {
 
         // Freitext-Pfad als Fallback
         if (from != null && !from.isBlank() && to != null && !to.isBlank()) {
+            log.debug("GET /api/route-preview from='{}' to='{}' transport='{}'", from, to, transport);
             return enrichment.previewRoute(from, to, transport)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.noContent().build());
         }
 
+        log.warn("GET /api/route-preview called with insufficient parameters");
         return ResponseEntity.badRequest().build();
     }
 }

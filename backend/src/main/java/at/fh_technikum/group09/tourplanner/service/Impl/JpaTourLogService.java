@@ -10,6 +10,8 @@ import at.fh_technikum.group09.tourplanner.service.TourLogService;
 import at.fh_technikum.group09.tourplanner.service.exception.TourLogNotFoundException;
 import at.fh_technikum.group09.tourplanner.service.exception.TourNotFoundException;
 import at.fh_technikum.group09.tourplanner.service.exception.TourServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import java.util.List;
 @Service
 @Transactional
 public class JpaTourLogService implements TourLogService {
+
+    private static final Logger log = LoggerFactory.getLogger(JpaTourLogService.class);
 
     private final TourLogDal tourLogDal;
     private final TourDal tourDal;
@@ -38,8 +42,10 @@ public class JpaTourLogService implements TourLogService {
             for (TourLogEntity le : tourLogDal.findByTourIdOrderByDateTimeAsc(tourId)) {
                 out.add(toTourLog(le, tourId));
             }
+            log.debug("findAllByTourId tourId={} userId={} count={}", tourId, userId, out.size());
             return out;
         } catch (TourDalException ex) {
+            log.error("Failed to retrieve logs for tourId={} userId={}", tourId, userId, ex);
             throw new TourServiceException("Failed to retrieve logs for tourId=" + tourId, ex);
         }
     }
@@ -53,23 +59,27 @@ public class JpaTourLogService implements TourLogService {
                     .map(le -> toTourLog(le, tourId))
                     .orElseThrow(() -> new TourLogNotFoundException(logId, tourId));
         } catch (TourDalException ex) {
+            log.error("Failed to retrieve logId={} for tourId={} userId={}", logId, tourId, userId, ex);
             throw new TourServiceException("Failed to retrieve logId=" + logId + " for tourId=" + tourId, ex);
         }
     }
 
     @Override
-    public TourLog create(long tourId, TourLog log, long userId) {
+    public TourLog create(long tourId, TourLog tourLog, long userId) {
         try {
             TourEntity tour = tourDal.findByIdAndUserId(tourId, userId)
                     .orElseThrow(() -> new TourNotFoundException(tourId));
             TourLogEntity entity = new TourLogEntity();
             entity.setTour(tour);
-            copyLogFields(log, entity);
+            copyLogFields(tourLog, entity);
             if (entity.getDateTime() == null) {
                 entity.setDateTime(LocalDateTime.now());
             }
-            return toTourLog(tourLogDal.save(entity), tourId);
+            TourLog created = toTourLog(tourLogDal.save(entity), tourId);
+            log.info("TourLog created id={} tourId={} userId={}", created.getId(), tourId, userId);
+            return created;
         } catch (TourDalException ex) {
+            log.error("Failed to create log for tourId={} userId={}", tourId, userId, ex);
             throw new TourServiceException("Failed to create log for tourId=" + tourId, ex);
         }
     }
@@ -84,8 +94,11 @@ public class JpaTourLogService implements TourLogService {
             if (existing.getDateTime() == null) {
                 existing.setDateTime(LocalDateTime.now());
             }
-            return toTourLog(tourLogDal.save(existing), tourId);
+            TourLog result = toTourLog(tourLogDal.save(existing), tourId);
+            log.info("TourLog updated id={} tourId={} userId={}", logId, tourId, userId);
+            return result;
         } catch (TourDalException ex) {
+            log.error("Failed to update logId={} for tourId={} userId={}", logId, tourId, userId, ex);
             throw new TourServiceException("Failed to update logId=" + logId + " for tourId=" + tourId, ex);
         }
     }
@@ -97,7 +110,9 @@ public class JpaTourLogService implements TourLogService {
             TourLogEntity entity = tourLogDal.findByIdAndTourId(logId, tourId)
                     .orElseThrow(() -> new TourLogNotFoundException(logId, tourId));
             tourLogDal.delete(entity);
+            log.info("TourLog deleted id={} tourId={} userId={}", logId, tourId, userId);
         } catch (TourDalException ex) {
+            log.error("Failed to delete logId={} for tourId={} userId={}", logId, tourId, userId, ex);
             throw new TourServiceException("Failed to delete logId=" + logId + " for tourId=" + tourId, ex);
         }
     }

@@ -4,6 +4,8 @@ import at.fh_technikum.group09.tourplanner.dto.TourDto;
 import at.fh_technikum.group09.tourplanner.dto.TourExportDto;
 import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -21,6 +23,8 @@ import java.util.stream.Collectors;
 @CrossOrigin
 public class TourController {
 
+    private static final Logger log = LoggerFactory.getLogger(TourController.class);
+
     private final TourService tourService;
 
     public TourController(TourService tourService) {
@@ -29,7 +33,9 @@ public class TourController {
 
     @GetMapping
     public List<TourDto> getAllTours() {
-        return tourService.getAllTours(currentUserId())
+        long userId = currentUserId();
+        log.debug("GET /api/tours userId={}", userId);
+        return tourService.getAllTours(userId)
                 .stream()
                 .map(this::toTourDto)
                 .collect(Collectors.toList());
@@ -37,7 +43,9 @@ public class TourController {
 
     @GetMapping("/search")
     public List<TourDto> searchTours(@RequestParam("q") String query) {
-        return tourService.searchTours(query, currentUserId())
+        long userId = currentUserId();
+        log.debug("GET /api/tours/search q='{}' userId={}", query, userId);
+        return tourService.searchTours(query, userId)
                 .stream()
                 .map(this::toTourDto)
                 .collect(Collectors.toList());
@@ -45,29 +53,40 @@ public class TourController {
 
     @GetMapping("/{id}")
     public TourDto getTourById(@PathVariable long id) {
-        return toTourDto(tourService.getTourById(id, currentUserId()));
+        long userId = currentUserId();
+        log.debug("GET /api/tours/{} userId={}", id, userId);
+        return toTourDto(tourService.getTourById(id, userId));
     }
 
     @PostMapping
     public ResponseEntity<TourDto> createTour(@RequestBody TourDto dto) {
-        Tour created = tourService.createTour(toTour(dto), currentUserId());
+        long userId = currentUserId();
+        log.info("POST /api/tours name='{}' userId={}", dto.getName(), userId);
+        Tour created = tourService.createTour(toTour(dto), userId);
+        log.info("Tour created id={} userId={}", created.getId(), userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(toTourDto(created));
     }
 
     @PutMapping("/{id}")
     public TourDto updateTour(@PathVariable long id, @RequestBody TourDto dto) {
-        return toTourDto(tourService.updateTour(id, toTour(dto), currentUserId()));
+        long userId = currentUserId();
+        log.info("PUT /api/tours/{} userId={}", id, userId);
+        return toTourDto(tourService.updateTour(id, toTour(dto), userId));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTour(@PathVariable long id) {
-        tourService.deleteTour(id, currentUserId());
+        long userId = currentUserId();
+        log.info("DELETE /api/tours/{} userId={}", id, userId);
+        tourService.deleteTour(id, userId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/export")
     public ResponseEntity<TourExportDto> exportTour(@PathVariable long id) {
-        TourExportDto data = tourService.exportTourById(id, currentUserId());
+        long userId = currentUserId();
+        log.info("GET /api/tours/{}/export userId={}", id, userId);
+        TourExportDto data = tourService.exportTourById(id, userId);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setContentDisposition(
@@ -79,7 +98,10 @@ public class TourController {
 
     @PostMapping("/import")
     public ResponseEntity<List<TourDto>> importTours(@RequestBody List<TourExportDto> exports) {
-        List<Tour> imported = tourService.importTours(exports, currentUserId());
+        long userId = currentUserId();
+        log.info("POST /api/tours/import count={} userId={}", exports.size(), userId);
+        List<Tour> imported = tourService.importTours(exports, userId);
+        log.info("Tours imported count={} userId={}", imported.size(), userId);
         List<TourDto> result = imported.stream().map(this::toTourDto).collect(Collectors.toList());
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }

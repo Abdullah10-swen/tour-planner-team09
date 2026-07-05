@@ -12,6 +12,8 @@ import at.fh_technikum.group09.tourplanner.model.Tour;
 import at.fh_technikum.group09.tourplanner.service.TourService;
 import at.fh_technikum.group09.tourplanner.service.exception.TourNotFoundException;
 import at.fh_technikum.group09.tourplanner.service.exception.TourServiceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,8 @@ import java.util.List;
 @Service
 @Transactional
 public class JpaTourService implements TourService {
+
+    private static final Logger log = LoggerFactory.getLogger(JpaTourService.class);
 
     private final TourDal tourDal;
     private final TourLogDal tourLogDal;
@@ -41,8 +45,10 @@ public class JpaTourService implements TourService {
             for (TourEntity e : tourDal.findAllByUserId(userId)) {
                 result.add(toTour(e));
             }
+            log.debug("getAllTours userId={} count={}", userId, result.size());
             return result;
         } catch (TourDalException ex) {
+            log.error("Failed to retrieve tours for userId={}", userId, ex);
             throw new TourServiceException("Failed to retrieve tours for userId=" + userId, ex);
         }
     }
@@ -55,6 +61,7 @@ public class JpaTourService implements TourService {
                     .map(this::toTour)
                     .orElseThrow(() -> new TourNotFoundException(id));
         } catch (TourDalException ex) {
+            log.error("Failed to retrieve tour id={} userId={}", id, userId, ex);
             throw new TourServiceException("Failed to retrieve tour id=" + id, ex);
         }
     }
@@ -67,8 +74,10 @@ public class JpaTourService implements TourService {
             copyTourFields(tour, entity);
             routeEnrichment.enrichIfPossible(entity);
             TourEntity saved = tourDal.save(entity);
+            log.info("Tour created id={} name='{}' userId={}", saved.getId(), saved.getName(), userId);
             return toTour(saved);
         } catch (TourDalException ex) {
+            log.error("Failed to create tour for userId={}", userId, ex);
             throw new TourServiceException("Failed to create tour", ex);
         }
     }
@@ -80,8 +89,11 @@ public class JpaTourService implements TourService {
                     .orElseThrow(() -> new TourNotFoundException(id));
             copyTourFields(updated, existing);
             routeEnrichment.enrichIfPossible(existing);
-            return toTour(tourDal.save(existing));
+            Tour result = toTour(tourDal.save(existing));
+            log.info("Tour updated id={} userId={}", id, userId);
+            return result;
         } catch (TourDalException ex) {
+            log.error("Failed to update tour id={} userId={}", id, userId, ex);
             throw new TourServiceException("Failed to update tour id=" + id, ex);
         }
     }
@@ -94,6 +106,7 @@ public class JpaTourService implements TourService {
             existing.setImageUrl(imageUrl);
             return toTour(tourDal.save(existing));
         } catch (TourDalException ex) {
+            log.error("Failed to update imageUrl for tour id={} userId={}", id, userId, ex);
             throw new TourServiceException("Failed to update imageUrl for tour id=" + id, ex);
         }
     }
@@ -105,7 +118,9 @@ public class JpaTourService implements TourService {
                 throw new TourNotFoundException(id);
             }
             tourDal.deleteById(id);
+            log.info("Tour deleted id={} userId={}", id, userId);
         } catch (TourDalException ex) {
+            log.error("Failed to delete tour id={} userId={}", id, userId, ex);
             throw new TourServiceException("Failed to delete tour id=" + id, ex);
         }
     }
@@ -140,14 +155,17 @@ public class JpaTourService implements TourService {
                 logDtos.add(logDto);
             }
             dto.setLogs(logDtos);
+            log.info("Tour exported id={} userId={} logCount={}", id, userId, logDtos.size());
             return dto;
         } catch (TourDalException ex) {
+            log.error("Failed to export tour id={} userId={}", id, userId, ex);
             throw new TourServiceException("Failed to export tour id=" + id, ex);
         }
     }
 
     @Override
     public List<Tour> importTours(List<TourExportDto> exports, long userId) {
+        log.info("Importing {} tours for userId={}", exports.size(), userId);
         try {
             List<Tour> imported = new ArrayList<>();
             for (TourExportDto dto : exports) {
@@ -181,8 +199,10 @@ public class JpaTourService implements TourService {
 
                 imported.add(toTour(saved));
             }
+            log.info("Import complete: {} tours created for userId={}", imported.size(), userId);
             return imported;
         } catch (TourDalException ex) {
+            log.error("Failed to import tours for userId={}", userId, ex);
             throw new TourServiceException("Failed to import tours", ex);
         }
     }
@@ -237,8 +257,10 @@ public class JpaTourService implements TourService {
                     result.add(tour);
                 }
             }
+            log.debug("searchTours query='{}' userId={} hits={}", query, userId, result.size());
             return result;
         } catch (TourDalException ex) {
+            log.error("Failed to search tours for userId={} query='{}'", userId, query, ex);
             throw new TourServiceException("Failed to search tours for userId=" + userId, ex);
         }
     }

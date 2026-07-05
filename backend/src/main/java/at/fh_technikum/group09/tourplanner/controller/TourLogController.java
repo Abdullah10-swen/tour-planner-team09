@@ -3,6 +3,8 @@ package at.fh_technikum.group09.tourplanner.controller;
 import at.fh_technikum.group09.tourplanner.dto.TourLogDto;
 import at.fh_technikum.group09.tourplanner.model.TourLog;
 import at.fh_technikum.group09.tourplanner.service.TourLogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 @CrossOrigin
 public class TourLogController {
 
+    private static final Logger log = LoggerFactory.getLogger(TourLogController.class);
+
     private final TourLogService tourLogService;
 
     public TourLogController(TourLogService tourLogService) {
@@ -25,7 +29,9 @@ public class TourLogController {
 
     @GetMapping
     public List<TourLogDto> getLogsForTour(@PathVariable long tourId) {
-        return tourLogService.findAllByTourId(tourId, currentUserId())
+        long userId = currentUserId();
+        log.debug("GET /api/tours/{}/logs userId={}", tourId, userId);
+        return tourLogService.findAllByTourId(tourId, userId)
                 .stream()
                 .map(this::toTourLogDto)
                 .collect(Collectors.toList());
@@ -33,12 +39,17 @@ public class TourLogController {
 
     @GetMapping("/{logId}")
     public TourLogDto getLogById(@PathVariable long tourId, @PathVariable long logId) {
-        return toTourLogDto(tourLogService.getByTourIdAndLogId(tourId, logId, currentUserId()));
+        long userId = currentUserId();
+        log.debug("GET /api/tours/{}/logs/{} userId={}", tourId, logId, userId);
+        return toTourLogDto(tourLogService.getByTourIdAndLogId(tourId, logId, userId));
     }
 
     @PostMapping
     public ResponseEntity<TourLogDto> createLog(@PathVariable long tourId, @RequestBody TourLogDto dto) {
-        TourLog created = tourLogService.create(tourId, toTourLog(dto), currentUserId());
+        long userId = currentUserId();
+        log.info("POST /api/tours/{}/logs userId={}", tourId, userId);
+        TourLog created = tourLogService.create(tourId, toTourLog(dto), userId);
+        log.info("TourLog created id={} tourId={} userId={}", created.getId(), tourId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(toTourLogDto(created));
     }
 
@@ -46,12 +57,16 @@ public class TourLogController {
     public TourLogDto updateLog(@PathVariable long tourId,
                                 @PathVariable long logId,
                                 @RequestBody TourLogDto dto) {
-        return toTourLogDto(tourLogService.update(tourId, logId, toTourLog(dto), currentUserId()));
+        long userId = currentUserId();
+        log.info("PUT /api/tours/{}/logs/{} userId={}", tourId, logId, userId);
+        return toTourLogDto(tourLogService.update(tourId, logId, toTourLog(dto), userId));
     }
 
     @DeleteMapping("/{logId}")
     public ResponseEntity<Void> deleteLog(@PathVariable long tourId, @PathVariable long logId) {
-        tourLogService.delete(tourId, logId, currentUserId());
+        long userId = currentUserId();
+        log.info("DELETE /api/tours/{}/logs/{} userId={}", tourId, logId, userId);
+        tourLogService.delete(tourId, logId, userId);
         return ResponseEntity.noContent().build();
     }
 

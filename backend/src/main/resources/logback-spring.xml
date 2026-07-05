@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ── Properties ──────────────────────────────────────────────── -->
+    <springProperty scope="context" name="APP_NAME"  source="spring.application.name" defaultValue="tourplanner"/>
+    <springProperty scope="context" name="LOG_LEVEL"  source="logging.level.root"       defaultValue="INFO"/>
+    <springProperty scope="context" name="LOG_DIR"    source="logging.file.path"         defaultValue="logs"/>
+
+    <!-- Pattern used by both appenders -->
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <!-- ── Console Appender ─────────────────────────────────────────── -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ── Rolling-File Appender ────────────────────────────────────── -->
+    <!--
+        Writes to logs/tourplanner.log.
+        Rolls over daily and when the file exceeds 10 MB.
+        Keeps at most 30 daily archives (≈ 1 month) and caps total size at 500 MB.
+    -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${APP_NAME}-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ── Logger configuration ─────────────────────────────────────── -->
+
+    <!-- Application packages: DEBUG in dev profile, INFO otherwise -->
+    <springProfile name="dev">
+        <logger name="at.fh_technikum.group09.tourplanner" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+    </springProfile>
+    <springProfile name="!dev">
+        <logger name="at.fh_technikum.group09.tourplanner" level="INFO" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+    </springProfile>
+
+    <!-- Reduce noise from infrastructure libraries -->
+    <logger name="org.hibernate.SQL"                              level="WARN"/>
+    <logger name="org.hibernate.type.descriptor.sql"             level="WARN"/>
+    <logger name="org.springframework.web"                        level="WARN"/>
+    <logger name="org.springframework.security"                   level="WARN"/>
+    <logger name="org.springframework.orm.jpa"                    level="WARN"/>
+    <logger name="com.zaxxer.hikari"                              level="WARN"/>
+
+    <!-- Root logger: everything not matched above -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>
