@@ -7,6 +7,8 @@ target/
 !**/src/test/**/target/
 
 uploads/
+logs/
+*.log
 
 ### STS ###
 .apt_generated
