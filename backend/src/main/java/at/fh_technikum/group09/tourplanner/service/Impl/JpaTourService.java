@@ -201,7 +201,10 @@ public class JpaTourService implements TourService {
 
     private Tour toTour(TourEntity e) {
         List<TourLogEntity> logs = tourLogDal.findByTourIdOrderByDateTimeAsc(e.getId());
+        return toTour(e, logs);
+    }
 
+    private Tour toTour(TourEntity e, List<TourLogEntity> logs) {
         Tour t = new Tour();
         t.setId(e.getId());
         t.setName(e.getName());
@@ -216,6 +219,58 @@ public class JpaTourService implements TourService {
         t.setPopularity(logs.size());
         t.setChildFriendliness(computeChildFriendliness(logs));
         return t;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Tour> searchTours(String query, long userId) {
+        if (query == null || query.isBlank()) {
+            return getAllTours(userId);
+        }
+        try {
+            String lower = query.toLowerCase().trim();
+            List<Tour> result = new ArrayList<>();
+            for (TourEntity entity : tourDal.findAllByUserId(userId)) {
+                List<TourLogEntity> logs = tourLogDal.findByTourIdOrderByDateTimeAsc(entity.getId());
+                Tour tour = toTour(entity, logs);
+                if (matchesQuery(tour, logs, lower)) {
+                    result.add(tour);
+                }
+            }
+            return result;
+        } catch (TourDalException ex) {
+            throw new TourServiceException("Failed to search tours for userId=" + userId, ex);
+        }
+    }
+
+    private boolean matchesQuery(Tour tour, List<TourLogEntity> logs, String lower) {
+        if (contains(tour.getName(), lower)) return true;
+        if (contains(tour.getDescription(), lower)) return true;
+        if (contains(tour.getFromLocation(), lower)) return true;
+        if (contains(tour.getToLocation(), lower)) return true;
+        if (contains(tour.getTransportType(), lower)) return true;
+        for (TourLogEntity log : logs) {
+            if (contains(log.getComment(), lower)) return true;
+        }
+        if (lower.equals(popularityLabel(tour.getPopularity()))) return true;
+        if (lower.equals(childFriendlinessLabel(tour.getChildFriendliness()))) return true;
+        return false;
+    }
+
+    private boolean contains(String text, String lower) {
+        return text != null && text.toLowerCase().contains(lower);
+    }
+
+    private String popularityLabel(int popularity) {
+        if (popularity == 0) return "unpopular";
+        if (popularity <= 3) return "popular";
+        return "very popular";
+    }
+
+    private String childFriendlinessLabel(double score) {
+        if (score < 0.33) return "not child-friendly";
+        if (score < 0.67) return "child-friendly";
+        return "very child-friendly";
     }
 
     /**

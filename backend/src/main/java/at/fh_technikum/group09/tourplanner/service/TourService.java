@@ -22,4 +22,6 @@ public interface TourService {
     TourExportDto exportTourById(long id, long userId);
 
     List<Tour> importTours(List<TourExportDto> exports, long userId);
+
+    List<Tour> searchTours(String query, long userId);
 }

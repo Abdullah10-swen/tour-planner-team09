@@ -57,6 +57,10 @@ export class TourApiService {
     return this.http.post<{ imageUrl: string }>(`${this.base}/${tourId}/image`, formData);
   }
 
+  searchTours(q: string): Observable<Tour[]> {
+    return this.http.get<Tour[]>(`${this.base}/search`, { params: { q } });
+  }
+
   exportTour(tourId: number): Observable<Blob> {
     return this.http.get(`${this.base}/${tourId}/export`, { responseType: 'blob' });
   }

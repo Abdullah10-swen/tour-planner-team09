@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, NgZone, computed, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { catchError, finalize, fromEvent, of, takeUntil } from 'rxjs';
+import { Subject, catchError, debounceTime, distinctUntilChanged, finalize, fromEvent, of, switchMap, takeUntil } from 'rxjs';
 
 import { Tour } from '../../../core/models/tour.model';
 import { TourLog } from '../../../core/models/tour-log.model';
@@ -32,10 +32,13 @@ const TRANSPORT_OPTIONS: { id: TransportFilter; label: string }[] = [
   templateUrl: './tour-dashboard.component.html',
   styleUrl: './tour-dashboard.component.css',
 })
-export class TourDashboardComponent {
+export class TourDashboardComponent implements OnDestroy {
   private readonly api = inject(TourApiService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly ngZone = inject(NgZone);
+
+  private readonly destroy$ = new Subject<void>();
+  private readonly searchSubject = new Subject<string>();
 
   readonly transportOptions = TRANSPORT_OPTIONS;
 
@@ -58,42 +61,53 @@ export class TourDashboardComponent {
     return this.tours().find((t) => t.id === id) ?? null;
   });
 
+  /** Transport-type filter only – text search is handled by the backend. */
   readonly filteredTours = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
     const f = this.transportFilter();
     return this.tours()
-      .filter((t) => {
-        if (f !== 'all' && t.transportType.toLowerCase() !== f) {
-          return false;
-        }
-        if (!q) {
-          return true;
-        }
-        const hay = [
-          t.name,
-          t.description,
-          t.fromLocation,
-          t.toLocation,
-          t.transportType,
-          String(t.popularity ?? 0),
-          this.formatChildFriendliness(t.childFriendliness ?? 0),
-        ]
-          .join(' ')
-          .toLowerCase();
-        return hay.includes(q);
-      })
+      .filter((t) => f === 'all' || t.transportType.toLowerCase() === f)
       .sort((a, b) => (b.popularity ?? 0) - (a.popularity ?? 0));
   });
 
   constructor() {
     this.refreshTours();
+
+    this.searchSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      switchMap((q) => {
+        this.loading.set(true);
+        const obs = q.trim() ? this.api.searchTours(q) : this.api.getTours();
+        return obs.pipe(
+          catchError(() => {
+            this.errorMessage.set('Suche fehlgeschlagen.');
+            return of([] as Tour[]);
+          }),
+          finalize(() => this.loading.set(false)),
+        );
+      }),
+      takeUntil(this.destroy$),
+    ).subscribe((list) => {
+      this.tours.set(list);
+      const sel = this.selectedTourId();
+      if (sel != null && !list.some((t) => t.id === sel)) {
+        this.selectedTourId.set(null);
+        this.logs.set([]);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   refreshTours(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
-    this.api
-      .getTours()
+    const q = this.searchQuery().trim();
+    const obs = q ? this.api.searchTours(q) : this.api.getTours();
+    obs
       .pipe(
         catchError(() => {
           this.errorMessage.set(
@@ -130,6 +144,7 @@ export class TourDashboardComponent {
 
   onSearchChange(value: string): void {
     this.searchQuery.set(value);
+    this.searchSubject.next(value);
   }
 
   deleteLog(tourId: number, logId: number | undefined): void {

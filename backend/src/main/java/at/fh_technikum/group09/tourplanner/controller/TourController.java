@@ -35,6 +35,14 @@ public class TourController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/search")
+    public List<TourDto> searchTours(@RequestParam("q") String query) {
+        return tourService.searchTours(query, currentUserId())
+                .stream()
+                .map(this::toTourDto)
+                .collect(Collectors.toList());
+    }
+
     @GetMapping("/{id}")
     public TourDto getTourById(@PathVariable long id) {
         return toTourDto(tourService.getTourById(id, currentUserId()));
