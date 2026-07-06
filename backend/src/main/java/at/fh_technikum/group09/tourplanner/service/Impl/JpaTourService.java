@@ -295,34 +295,25 @@ public class JpaTourService implements TourService {
         return "very child-friendly";
     }
 
-    /**
-     * Derives a child-friendliness score in [0.0, 1.0] from the tour logs.
-     *
-     * <p>Three factors are averaged, each normalised to [0, 1] where 1 = best:
-     * <ul>
-     *   <li>difficulty  (scale 1–3; 1=easy → 1.0, 3=hard → 0.0)</li>
-     *   <li>total time  (hours; 0 h → 1.0, ≥ 8 h → 0.0)</li>
-     *   <li>total distance (km; 0 km → 1.0, ≥ 30 km → 0.0)</li>
-     * </ul>
-     * Returns 0.0 when no logs are available.
-     */
+    
     private double computeChildFriendliness(List<TourLogEntity> logs) {
         if (logs.isEmpty()) {
             return 0.0;
         }
-
+        //averages nehmen und dann die scores berechnen
         double avgDifficulty = logs.stream().mapToInt(TourLogEntity::getDifficulty).average().orElse(1);
         double avgTime       = logs.stream().mapToDouble(TourLogEntity::getTotalTime).average().orElse(0);
         double avgDistance   = logs.stream().mapToDouble(TourLogEntity::getTotalDistance).average().orElse(0);
 
-        double diffScore = clamp(1.0 - (avgDifficulty - 1.0) / 2.0);
-        double timeScore = clamp(1.0 - avgTime / 8.0);
-        double distScore = clamp(1.0 - avgDistance / 30.0);
+        double diffScore = clamp(1.0 - (avgDifficulty - 1.0) / 2.0); //Difficulty geht von 1 bis 3
+        double timeScore = clamp(1.0 - avgTime / 8.0); //8h wurde als maximum festgelegt weil mehr als das ist nicht kindgerecht.
+        double distScore = clamp(1.0 - avgDistance / 30.0); //30km wurde als maximum festgelegt weil mehr als das ist nicht kindgerecht.
 
-        double raw = (diffScore + timeScore + distScore) / 3.0;
-        return Math.round(raw * 100.0) / 100.0;
+        double raw = (diffScore + timeScore + distScore) / 3.0; //durchschnitt der 3 scores
+        return Math.round(raw * 100.0) / 100.0; 
     }
 
+    //clamp wird benutzt um die scores zwischen 0 und 1 zu halten
     private double clamp(double value) {
         return Math.max(0.0, Math.min(1.0, value));
     }
