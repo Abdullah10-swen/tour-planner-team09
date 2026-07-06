@@ -81,7 +81,7 @@ Die API-Basis-URL ist in `frontend/src/app/core/api/api-base.ts` konfiguriert (`
 
 ## Dokumentation
 
-- **Protokoll / UX & Wireframes (Zwischenabgabe):** siehe `docs/PROTOKOLL-Zwischenabgabe.pdf`
+- **Protokoll:** siehe `docs/Protokoll_Tourplanner.pdf`
 
 ## Kurs / Kontext
 
